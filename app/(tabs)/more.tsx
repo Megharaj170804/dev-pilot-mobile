@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppIcon, type AppIconName } from '../../src/components/AppIcon';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
 import { Badge, Card, OfflineBanner, ScreenScroll } from '../../src/components/ui';
 import { RADII, SPACING } from '../../src/constants/theme';
@@ -11,7 +11,7 @@ interface ToolLink {
   route: '/pr-comments' | '/kpi-comments' | '/eod-updates' | '/settings' | '/about';
   title: string;
   desc: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: AppIconName;
   badge?: string;
 }
 
@@ -65,7 +65,7 @@ export default function ToolsHubScreen() {
             <Card>
               <View style={styles.row}>
                 <View style={[styles.iconBox, { backgroundColor: palette.primaryMuted }]}>
-                  <Ionicons name={t.icon} size={22} color={palette.primaryInk} />
+                  <AppIcon name={t.icon} size={22} color={palette.primaryInk} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -74,7 +74,7 @@ export default function ToolsHubScreen() {
                   </View>
                   <Text style={{ color: palette.textMuted, fontSize: 12.5 }}>{t.desc}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={palette.textSubtle} />
+                <AppIcon name="chevron-forward" size={18} color={palette.textSubtle} />
               </View>
             </Card>
           </Pressable>
@@ -84,7 +84,7 @@ export default function ToolsHubScreen() {
           <Card>
             <View style={styles.row}>
               <View style={[styles.iconBox, { backgroundColor: palette.surface2 }]}>
-                <Ionicons name={themeMode === 'dark' ? 'sunny-outline' : 'moon-outline'} size={22} color={palette.text} />
+                <AppIcon name={themeMode === 'dark' ? 'sunny-outline' : 'moon-outline'} size={22} color={palette.text} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: palette.text, fontWeight: '700', fontSize: 15 }}>

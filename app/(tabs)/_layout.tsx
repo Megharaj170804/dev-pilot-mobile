@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { AppIcon } from '../../src/components/AppIcon';
 import { useApp } from '../../src/context/AppContext';
 
 export default function TabLayout() {
@@ -25,35 +25,35 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Today',
-          tabBarIcon: ({ color, size }) => <Ionicons name="today-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <AppIcon name="today-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="sync-pr"
         options={{
           title: 'PR Sync',
-          tabBarIcon: ({ color, size }) => <Ionicons name="git-pull-request-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <AppIcon name="git-pull-request-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="quick-task"
         options={{
           title: 'Quick Task',
-          tabBarIcon: ({ color, size }) => <Ionicons name="add-circle-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <AppIcon name="add-circle-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="hierarchy"
         options={{
           title: 'Hierarchy',
-          tabBarIcon: ({ color, size }) => <Ionicons name="layers-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <AppIcon name="layers-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="more"
         options={{
           title: 'Tools',
-          tabBarIcon: ({ color, size }) => <Ionicons name="apps-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <AppIcon name="apps-outline" size={size} color={color} />,
         }}
       />
     </Tabs>

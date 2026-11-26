@@ -1,10 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Linking, Platform } from 'react-native';
+import { AppIcon } from '../../src/components/AppIcon';
 import { LogTimeModal } from '../../src/components/LogTimeModal';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
 import {
@@ -303,7 +303,7 @@ export default function DailyWorkspaceScreen() {
                   >
                     <View style={styles.taskTop}>
                       <Pressable onPress={() => handleTogglePin(t.id)} style={styles.pinBtn}>
-                        <Ionicons
+                        <AppIcon
                           name={t.is_pinned ? 'star' : 'star-outline'}
                           size={16}
                           color={t.is_pinned ? palette.primaryInk : palette.textMuted}

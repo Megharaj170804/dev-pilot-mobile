@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "net.tekdi.devpilot",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#08090C"
@@ -36,14 +36,6 @@
       "expo-router",
       "expo-sqlite",
       "expo-secure-store",
-      [
-        "expo-font",
-        {
-          "fonts": [
-            "./node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf"
-          ]
-        }
-      ],
       [
         "expo-build-properties",
         {

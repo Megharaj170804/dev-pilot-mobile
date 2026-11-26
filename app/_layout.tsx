@@ -1,22 +1,19 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { enableFreeze } from "react-native-screens";
 import { AppSplashScreen } from "../src/components/AppSplashScreen";
-
-enableFreeze(true);
 import { CommandPaletteModal } from "../src/components/CommandPaletteModal";
 import { ToastBanner } from "../src/components/ui";
 import { AppProvider, useApp } from "../src/context/AppContext";
 
+enableFreeze(true);
+
 function RootNavigator() {
   const { dbReady, palette, themeMode } = useApp();
-  const [fontsLoaded, fontError] = useFonts(Ionicons.font);
 
-  if (!dbReady || (!fontsLoaded && !fontError)) {
+  if (!dbReady) {
     return (
       <>
         <StatusBar style={themeMode === "dark" ? "light" : "dark"} />

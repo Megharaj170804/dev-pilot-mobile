@@ -1,5 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
+import { AppIcon, type AppIconName } from './AppIcon';
 import {
   ActivityIndicator,
   FlatList,
@@ -99,7 +99,7 @@ export function Button({
   size?: 'sm' | 'md';
   disabled?: boolean;
   loading?: boolean;
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: AppIconName;
   style?: ViewStyle;
 }) {
   const { palette } = useThemePalette();
@@ -135,7 +135,7 @@ export function Button({
         <ActivityIndicator size="small" color={fgMap[variant]} />
       ) : (
         <>
-          {icon ? <Ionicons name={icon} size={size === 'sm' ? 14 : 16} color={fgMap[variant]} /> : null}
+          {icon ? <AppIcon name={icon} size={size === 'sm' ? 14 : 16} color={fgMap[variant]} /> : null}
           <Text
             style={[
               styles.buttonText,
@@ -288,7 +288,7 @@ export function OfflineBanner({ onPressQueue }: { onPressQueue?: () => void }) {
         },
       ]}
     >
-      <Ionicons
+      <AppIcon
         name={isOnline ? 'cloud-upload-outline' : 'cloud-offline-outline'}
         size={16}
         color={isOnline ? palette.primaryInk : palette.warning}
@@ -331,7 +331,7 @@ export function TextilePreview({ text }: { text: string }) {
         if (b.type === 'checkbox') {
           return (
             <View key={idx} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
-              <Ionicons
+              <AppIcon
                 name={b.checked ? 'checkbox' : 'square-outline'}
                 size={16}
                 color={b.checked ? palette.success : palette.textMuted}
@@ -401,7 +401,7 @@ export function SelectField<T extends string | number>({
         >
           {selected ? selected.label : placeholder}
         </Text>
-        <Ionicons name="chevron-down" size={16} color={palette.textMuted} />
+        <AppIcon name="chevron-down" size={16} color={palette.textMuted} />
       </Pressable>
 
       {open ? (
@@ -436,7 +436,7 @@ export function SelectField<T extends string | number>({
                         </Text>
                         {item.sub ? <Text style={{ color: palette.textMuted, fontSize: 12 }}>{item.sub}</Text> : null}
                       </View>
-                      {active ? <Ionicons name="checkmark" size={18} color={palette.primaryInk} /> : null}
+                      {active ? <AppIcon name="checkmark" size={18} color={palette.primaryInk} /> : null}
                     </Pressable>
                   );
                 }}

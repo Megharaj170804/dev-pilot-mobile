@@ -1,5 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import { AppIcon } from '../src/components/AppIcon';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, Share, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
@@ -236,7 +236,7 @@ export default function PrCommentsScreen() {
                       ]}
                     >
                       <View style={styles.cmtHead}>
-                        <Ionicons
+                        <AppIcon
                           name={checked ? 'checkbox' : 'square-outline'}
                           size={18}
                           color={checked ? palette.primaryInk : palette.textMuted}

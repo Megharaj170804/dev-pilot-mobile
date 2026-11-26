@@ -1,16 +1,16 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { GITHUB_PR_URL_REGEX } from '../constants/config';
 import { RADII, SPACING } from '../constants/theme';
 import { useApp } from '../context/AppContext';
+import { AppIcon, type AppIconName } from './AppIcon';
 
 interface CommandAction {
   id: string;
   label: string;
   sub: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: AppIconName;
   run: () => void;
 }
 
@@ -96,12 +96,14 @@ export function CommandPaletteModal() {
     return list.filter(a => a.label.toLowerCase().includes(lower) || a.sub.toLowerCase().includes(lower));
   }, [query, router, syncNow, themeMode, toggleTheme]);
 
+  if (!commandPaletteOpen) return null;
+
   return (
-    <Modal visible={commandPaletteOpen} transparent animationType="fade" onRequestClose={close}>
+    <Modal visible transparent animationType="fade" onRequestClose={close}>
       <Pressable style={styles.backdrop} onPress={close}>
         <Pressable style={[styles.dialog, { backgroundColor: palette.panel, borderColor: palette.borderStrong }]}>
           <View style={[styles.searchRow, { borderBottomColor: palette.borderSubtle }]}>
-            <Ionicons name="search" size={18} color={palette.textMuted} />
+            <AppIcon name="search" size={18} color={palette.textMuted} />
             <TextInput
               value={query}
               onChangeText={setQuery}
@@ -111,7 +113,7 @@ export function CommandPaletteModal() {
               style={[styles.searchInput, { color: palette.text }]}
             />
             <Pressable onPress={close}>
-              <Ionicons name="close" size={20} color={palette.textMuted} />
+              <AppIcon name="close" size={20} color={palette.textMuted} />
             </Pressable>
           </View>
           <FlatList
@@ -127,12 +129,12 @@ export function CommandPaletteModal() {
                   pressed && { backgroundColor: palette.surface2 },
                 ]}
               >
-                <Ionicons name={item.icon} size={18} color={palette.primaryInk} />
+                <AppIcon name={item.icon} size={18} color={palette.primaryInk} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: palette.text, fontWeight: '600', fontSize: 14 }}>{item.label}</Text>
                   <Text style={{ color: palette.textMuted, fontSize: 12 }}>{item.sub}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color={palette.textSubtle} />
+                <AppIcon name="chevron-forward" size={16} color={palette.textSubtle} />
               </Pressable>
             )}
           />

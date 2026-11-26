@@ -1,10 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RADII, SPACING } from '../constants/theme';
 import { useApp } from '../context/AppContext';
+import { AppIcon } from './AppIcon';
 
 export function ScreenHeader({
   title,
@@ -33,11 +33,11 @@ export function ScreenHeader({
       <View style={styles.left}>
         {showBack ? (
           <Pressable onPress={() => router.back()} style={styles.iconBtn}>
-            <Ionicons name="arrow-back" size={20} color={palette.text} />
+            <AppIcon name="arrow-back" size={20} color={palette.text} />
           </Pressable>
         ) : (
           <View style={[styles.logoBox, { backgroundColor: palette.primary }]}>
-            <Ionicons name="flash" size={14} color="#FFFFFF" />
+            <AppIcon name="flash" size={14} color="#FFFFFF" />
           </View>
         )}
         <View style={{ flex: 1 }}>
@@ -84,14 +84,14 @@ export function ScreenHeader({
           onPress={() => setCommandPaletteOpen(true)}
           style={[styles.iconBtn, { backgroundColor: palette.surface2, borderColor: palette.border, borderWidth: 1 }]}
         >
-          <Ionicons name="search" size={16} color={palette.text} />
+          <AppIcon name="search" size={16} color={palette.text} />
         </Pressable>
 
         <Pressable
           onPress={() => router.push('/settings')}
           style={[styles.iconBtn, { backgroundColor: palette.surface2, borderColor: palette.border, borderWidth: 1 }]}
         >
-          <Ionicons name="settings-outline" size={16} color={palette.text} />
+          <AppIcon name="settings-outline" size={16} color={palette.text} />
         </Pressable>
       </View>
     </View>

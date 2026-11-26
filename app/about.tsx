@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppIcon, type AppIconName } from '../src/components/AppIcon';
 import { ScreenHeader } from '../src/components/ScreenHeader';
 import { Badge, Button, Card, CardHeader, ScreenScroll } from '../src/components/ui';
 import { RADII, SPACING } from '../src/constants/theme';
@@ -13,7 +13,7 @@ const REPO_URL = 'https://github.com/Megharaj170804/dev-pilot-mobile';
 interface FeatureGuide {
   title: string;
   route: '/(tabs)' | '/(tabs)/sync-pr' | '/(tabs)/quick-task' | '/(tabs)/hierarchy' | '/pr-comments' | '/kpi-comments' | '/eod-updates';
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: AppIconName;
   summary: string;
   offlineNote: string;
 }
@@ -82,7 +82,7 @@ export default function AboutScreen() {
         <Card>
           <View style={styles.hero}>
             <View style={[styles.logoBox, { backgroundColor: palette.primary }]}>
-              <Ionicons name="flash" size={28} color="#FFFFFF" />
+              <AppIcon name="flash" size={28} color="#FFFFFF" />
             </View>
             <View style={{ flex: 1, gap: 4 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -120,7 +120,7 @@ export default function AboutScreen() {
                 key={item.title}
                 style={[styles.archRow, { backgroundColor: palette.surface2, borderColor: palette.borderSubtle }]}
               >
-                <Ionicons name={item.icon} size={20} color={palette.primaryInk} style={{ marginTop: 2 }} />
+                <AppIcon name={item.icon} size={20} color={palette.primaryInk} style={{ marginTop: 2 }} />
                 <View style={{ flex: 1, gap: 3 }}>
                   <Text style={{ color: palette.text, fontWeight: '700', fontSize: 13.5 }}>{item.title}</Text>
                   <Text style={{ color: palette.textMuted, fontSize: 12.5, lineHeight: 18 }}>{item.desc}</Text>
@@ -140,9 +140,9 @@ export default function AboutScreen() {
                 style={[styles.featureCard, { backgroundColor: palette.surface2, borderColor: palette.borderSubtle }]}
               >
                 <View style={styles.featureHead}>
-                  <Ionicons name={f.icon} size={18} color={palette.primaryInk} />
+                  <AppIcon name={f.icon} size={18} color={palette.primaryInk} />
                   <Text style={{ color: palette.text, fontWeight: '700', fontSize: 14, flex: 1 }}>{f.title}</Text>
-                  <Ionicons name="chevron-forward" size={16} color={palette.textSubtle} />
+                  <AppIcon name="chevron-forward" size={16} color={palette.textSubtle} />
                 </View>
                 <Text style={{ color: palette.text2, fontSize: 12.5, lineHeight: 18 }}>{f.summary}</Text>
                 <Text style={{ color: palette.success, fontSize: 11.5, fontWeight: '600' }}>
