@@ -1,6 +1,7 @@
+import { useIsFocused } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { InteractionManager, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
 import {
   Badge,
@@ -39,8 +40,15 @@ import type {
 
 export default function QuickTaskScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const params = useLocalSearchParams<{ context?: string; hours?: string }>();
   const { palette, config, isOnline, syncVersion, showToast } = useApp();
+  const lastSyncVersionRef = useRef(-1);
+  const idsRef = useRef<{ projectId: number | null; assigneeId: number | null; activityId: number | null }>({
+    projectId: null,
+    assigneeId: null,
+    activityId: null,
+  });
 
   const [context, setContext] = useState('');
   const [dateStr, setDateStr] = useState(toDateString(new Date()));
@@ -74,6 +82,10 @@ export default function QuickTaskScreen() {
   const [created, setCreated] = useState<{ issue_id: number; issue_url: string; queued: boolean; time_warning: string | null } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
 
+  idsRef.current.projectId = projectId;
+  idsRef.current.assigneeId = assigneeId;
+  idsRef.current.activityId = activityId;
+
   const loadData = useCallback(async () => {
     const [cachedMe, cachedProjects, cachedActs, cachedHist, calEvents] = await Promise.all([
       ReferenceRepo.getMe(),
@@ -88,11 +100,18 @@ export default function QuickTaskScreen() {
     setEvents(calEvents);
     setRecentQuick(cachedHist.filter(h => h.quick_task).slice(0, 6));
 
-    const pid = projectId || cachedMe?.default_project_id || cachedProjects[0]?.id || null;
-    if (pid && !projectId) setProjectId(pid);
-    if (!assigneeId && cachedMe) setAssigneeId(cachedMe.id);
-    if (!activityId && cachedActs.length) {
+    const pid = idsRef.current.projectId || cachedMe?.default_project_id || cachedProjects[0]?.id || null;
+    if (pid && !idsRef.current.projectId) {
+      idsRef.current.projectId = pid;
+      setProjectId(pid);
+    }
+    if (!idsRef.current.assigneeId && cachedMe) {
+      idsRef.current.assigneeId = cachedMe.id;
+      setAssigneeId(cachedMe.id);
+    }
+    if (!idsRef.current.activityId && cachedActs.length) {
       const def = cachedActs.find(a => /meeting/i.test(a.name)) || cachedActs[0];
+      idsRef.current.activityId = def.id;
       setActivityId(def.id);
     }
     if (pid) {
@@ -105,11 +124,17 @@ export default function QuickTaskScreen() {
       setFeatures(feats);
       setVersions(vers);
     }
-  }, [dateStr, projectId, assigneeId, activityId]);
+  }, [dateStr]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData, syncVersion]);
+    if (!isFocused) return;
+    if (lastSyncVersionRef.current === syncVersion) return;
+    lastSyncVersionRef.current = syncVersion;
+    const handle = InteractionManager.runAfterInteractions(() => {
+      loadData();
+    });
+    return () => handle.cancel();
+  }, [isFocused, loadData, syncVersion]);
 
   useEffect(() => {
     if (params.context) setContext(params.context);

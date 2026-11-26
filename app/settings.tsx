@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Linking, Platform, StyleSheet, Text, View } from 'react-native';
-import { ScreenHeader } from '../src/components/ScreenHeader';
+import React, { useCallback, useEffect, useState } from "react";
+import { Alert, Linking, Platform, StyleSheet, Text, View } from "react-native";
+import { ScreenHeader } from "../src/components/ScreenHeader";
 import {
   Badge,
   Button,
@@ -9,14 +9,24 @@ import {
   FieldInput,
   ScreenScroll,
   SegmentedControl,
-} from '../src/components/ui';
-import { DEFAULT_REDMINE_URL, DEFAULT_SERVER_URL } from '../src/constants/config';
-import { RADII, SPACING } from '../src/constants/theme';
-import { useApp } from '../src/context/AppContext';
-import { SyncQueueRepo, clearCachedData } from '../src/db/repositories';
-import { detectDefaultServerUrl, saveAppConfig } from '../src/services/configService';
-import { RedmineClient } from '../src/services/redmineClient';
-import type { ConnectionMode, GoogleIntegrationsStatus, SyncQueueItem } from '../src/types';
+} from "../src/components/ui";
+import {
+  DEFAULT_REDMINE_URL,
+  DEFAULT_SERVER_URL,
+} from "../src/constants/config";
+import { RADII, SPACING } from "../src/constants/theme";
+import { useApp } from "../src/context/AppContext";
+import { SyncQueueRepo, clearCachedData } from "../src/db/repositories";
+import {
+  detectDefaultServerUrl,
+  saveAppConfig,
+} from "../src/services/configService";
+import { RedmineClient } from "../src/services/redmineClient";
+import type {
+  ConnectionMode,
+  GoogleIntegrationsStatus,
+  SyncQueueItem,
+} from "../src/types";
 
 export default function SettingsScreen() {
   const {
@@ -31,22 +41,23 @@ export default function SettingsScreen() {
     showToast,
   } = useApp();
 
-  const [mode, setMode] = useState<ConnectionMode>('direct');
+  const [mode, setMode] = useState<ConnectionMode>("direct");
   const [redmineUrl, setRedmineUrl] = useState(DEFAULT_REDMINE_URL);
-  const [redmineApiKey, setRedmineApiKey] = useState('');
-  const [githubToken, setGithubToken] = useState('');
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [groqApiKey, setGroqApiKey] = useState('');
+  const [redmineApiKey, setRedmineApiKey] = useState("");
+  const [githubToken, setGithubToken] = useState("");
+  const [geminiApiKey, setGeminiApiKey] = useState("");
+  const [groqApiKey, setGroqApiKey] = useState("");
   const [serverUrl, setServerUrl] = useState(DEFAULT_SERVER_URL);
-  const [googleClientId, setGoogleClientId] = useState('');
-  const [googleClientSecret, setGoogleClientSecret] = useState('');
-  const [eodSheetId, setEodSheetId] = useState('');
-  const [googleStatus, setGoogleStatus] = useState<GoogleIntegrationsStatus | null>(null);
+  const [googleClientId, setGoogleClientId] = useState("");
+  const [googleClientSecret, setGoogleClientSecret] = useState("");
+  const [eodSheetId, setEodSheetId] = useState("");
+  const [googleStatus, setGoogleStatus] =
+    useState<GoogleIntegrationsStatus | null>(null);
   const [savingGoogle, setSavingGoogle] = useState(false);
   const [queueItems, setQueueItems] = useState<SyncQueueItem[]>([]);
   const [saving, setSaving] = useState(false);
-  const [connInfo, setConnInfo] = useState('');
-  const [connError, setConnError] = useState('');
+  const [connInfo, setConnInfo] = useState("");
+  const [connError, setConnError] = useState("");
 
   const loadQueue = useCallback(async () => {
     setQueueItems(await SyncQueueRepo.list());
@@ -65,10 +76,12 @@ export default function SettingsScreen() {
           groqApiKey,
           serverUrl,
         }),
-        serverUrl: (targetServerUrl || serverUrl).trim().replace(/\/+$/, ''),
+        serverUrl: (targetServerUrl || serverUrl).trim().replace(/\/+$/, ""),
       };
       if (!effectiveCfg.serverUrl) return;
-      const status = await RedmineClient.fetchIntegrationsStatus(effectiveCfg).catch(() => null);
+      const status = await RedmineClient.fetchIntegrationsStatus(
+        effectiveCfg,
+      ).catch(() => null);
       if (status) {
         setGoogleStatus(status);
         if (status.googleConfig?.eod_sheet_id && !eodSheetId) {
@@ -76,7 +89,17 @@ export default function SettingsScreen() {
         }
       }
     },
-    [config, mode, redmineUrl, redmineApiKey, githubToken, geminiApiKey, groqApiKey, serverUrl, eodSheetId]
+    [
+      config,
+      mode,
+      redmineUrl,
+      redmineApiKey,
+      githubToken,
+      geminiApiKey,
+      groqApiKey,
+      serverUrl,
+      eodSheetId,
+    ],
   );
 
   useEffect(() => {
@@ -88,9 +111,9 @@ export default function SettingsScreen() {
     setGeminiApiKey(config.geminiApiKey);
     setGroqApiKey(config.groqApiKey);
     setServerUrl(config.serverUrl);
-    setGoogleClientId(config.googleClientId || '');
-    setGoogleClientSecret(config.googleClientSecret || '');
-    setEodSheetId(config.eodSheetId || '');
+    setGoogleClientId(config.googleClientId || "");
+    setGoogleClientSecret(config.googleClientSecret || "");
+    setEodSheetId(config.eodSheetId || "");
     refreshGoogleStatus(config.serverUrl);
   }, [config]);
 
@@ -100,8 +123,8 @@ export default function SettingsScreen() {
 
   const handleSave = async () => {
     setSaving(true);
-    setConnInfo('');
-    setConnError('');
+    setConnInfo("");
+    setConnError("");
     try {
       const nextCfg = {
         mode,
@@ -118,29 +141,33 @@ export default function SettingsScreen() {
       await saveAppConfig(nextCfg);
       await reloadConfig();
 
-      let meError = '';
-      const me = await RedmineClient.fetchMe(nextCfg).catch(err => {
-        meError = err instanceof Error ? err.message : 'Connection failed';
+      let meError = "";
+      const me = await RedmineClient.fetchMe(nextCfg).catch((err) => {
+        meError = err instanceof Error ? err.message : "Connection failed";
         return null;
       });
 
       const integrations = nextCfg.serverUrl
-        ? await RedmineClient.fetchIntegrationsStatus(nextCfg).catch(() => ({ cal: null, sheets: null, googleConfig: null }))
+        ? await RedmineClient.fetchIntegrationsStatus(nextCfg).catch(() => ({
+            cal: null,
+            sheets: null,
+            googleConfig: null,
+          }))
         : { cal: null, sheets: null, googleConfig: null };
       setGoogleStatus(integrations);
 
       const calText =
         integrations.cal === null
-          ? 'Calendar: server unreachable'
+          ? "Calendar: server unreachable"
           : integrations.cal.connected
-            ? `Calendar: ${integrations.cal.email || 'Connected'}`
-            : 'Calendar: not connected in Web app';
+            ? `Calendar: ${integrations.cal.email || "Connected"}`
+            : "Calendar: not connected in Web app";
       const sheetsText =
         integrations.sheets === null
-          ? 'Sheets: server unreachable'
+          ? "Sheets: server unreachable"
           : integrations.sheets.connected
-            ? `Sheets: ${integrations.sheets.email || 'Connected'}`
-            : 'Sheets: not connected in Web app';
+            ? `Sheets: ${integrations.sheets.email || "Connected"}`
+            : "Sheets: not connected in Web app";
 
       if (me) {
         setConnInfo(`Signed in as ${me.name} · ${calText} · ${sheetsText}`);
@@ -148,17 +175,20 @@ export default function SettingsScreen() {
         await syncNow();
       } else {
         const isPhoneLocalhost =
-          Platform.OS !== 'web' && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(nextCfg.serverUrl);
+          Platform.OS !== "web" &&
+          /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(
+            nextCfg.serverUrl,
+          );
         const hint =
-          Platform.OS === 'web' && mode === 'direct'
+          Platform.OS === "web" && mode === "direct"
             ? 'Browser CORS blocks direct Redmine calls. Switch to "DevPilot Server Proxy" and ensure "npm start" is running in pr-to-tracker/.'
-            : mode === 'server' && isPhoneLocalhost
+            : mode === "server" && isPhoneLocalhost
               ? 'On a phone, "localhost" points to the phone itself — not your computer. Connect both to the same Wi-Fi and enter http://<your-laptop-ip>:3333 (e.g. run "hostname -I" on laptop).'
-              : mode === 'server'
+              : mode === "server"
                 ? `Cannot reach DevPilot Server at ${nextCfg.serverUrl} (${meError}). Ensure "npm start" is running in pr-to-tracker/ and both devices are on the same Wi-Fi.`
                 : `Connection failed: ${meError}`;
         setConnError(hint);
-        showToast('Saved locally — connection check failed');
+        showToast("Saved locally — connection check failed");
       }
     } finally {
       setSaving(false);
@@ -166,7 +196,9 @@ export default function SettingsScreen() {
   };
 
   const returnToUrl =
-    Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.href : undefined;
+    Platform.OS === "web" && typeof window !== "undefined"
+      ? window.location.href
+      : undefined;
 
   const currentCfgForGoogle = {
     mode,
@@ -175,7 +207,7 @@ export default function SettingsScreen() {
     githubToken,
     geminiApiKey,
     groqApiKey,
-    serverUrl: serverUrl.trim().replace(/\/+$/, ''),
+    serverUrl: serverUrl.trim().replace(/\/+$/, ""),
     googleClientId,
     googleClientSecret,
     eodSheetId,
@@ -183,7 +215,7 @@ export default function SettingsScreen() {
 
   const handleSaveGoogleApp = async () => {
     if (!currentCfgForGoogle.serverUrl) {
-      showToast('Enter DevPilot Server URL first');
+      showToast("Enter DevPilot Server URL first");
       return;
     }
     setSavingGoogle(true);
@@ -196,9 +228,11 @@ export default function SettingsScreen() {
         eod_sheet_id: eodSheetId.trim() || undefined,
       });
       await refreshGoogleStatus(currentCfgForGoogle.serverUrl);
-      showToast('Saved Google OAuth & Sheet configuration');
+      showToast("Saved Google OAuth & Sheet configuration");
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not save Google config');
+      showToast(
+        err instanceof Error ? err.message : "Could not save Google config",
+      );
     } finally {
       setSavingGoogle(false);
     }
@@ -207,49 +241,60 @@ export default function SettingsScreen() {
   const handleDisconnectCal = async () => {
     await RedmineClient.disconnectCalendar(currentCfgForGoogle).catch(() => {});
     await refreshGoogleStatus(currentCfgForGoogle.serverUrl);
-    showToast('Disconnected Google Calendar');
+    showToast("Disconnected Google Calendar");
   };
 
   const handleDisconnectSheets = async () => {
     await RedmineClient.disconnectSheets(currentCfgForGoogle).catch(() => {});
     await refreshGoogleStatus(currentCfgForGoogle.serverUrl);
-    showToast('Disconnected Google Sheets');
+    showToast("Disconnected Google Sheets");
   };
 
   const handleRemoveQueueItem = async (id: number) => {
     await SyncQueueRepo.remove(id);
     await loadQueue();
-    showToast('Removed queued item');
+    showToast("Removed queued item");
   };
 
   const handleClearCache = () => {
-    Alert.alert('Clear SQLite Cache', 'Delete cached issues, PRs, and time entries? Pending outbox items stay intact.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Clear Cache',
-        style: 'destructive',
-        onPress: async () => {
-          await clearCachedData();
-          showToast('SQLite cache cleared');
+    Alert.alert(
+      "Clear SQLite Cache",
+      "Delete cached issues, PRs, and time entries? Pending outbox items stay intact.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear Cache",
+          style: "destructive",
+          onPress: async () => {
+            await clearCachedData();
+            showToast("SQLite cache cleared");
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.bg }}>
-      <ScreenHeader title="Settings & Sync Queue" subtitle="Encrypted keys + SQLite outbox" showBack />
+      <ScreenHeader
+        title="Settings & Sync Queue"
+        subtitle="Encrypted keys + SQLite outbox"
+        showBack
+      />
 
       <ScreenScroll>
         <Card>
-          <CardHeader title="Connection & Credentials" subtitle="Stored in SecureStore; works offline after initial sync" />
+          <CardHeader
+            title="Connection & Credentials"
+            subtitle="Stored in SecureStore; works offline after initial sync"
+          />
           <View style={styles.body}>
             <SegmentedControl
               value={mode}
               onChange={setMode}
               options={[
-                { value: 'direct', label: 'Direct REST APIs' },
-                { value: 'server', label: 'DevPilot Server Proxy' },
+                { value: "direct", label: "Direct REST APIs" },
+                { value: "server", label: "DevPilot Server Proxy" },
               ]}
             />
 
@@ -260,12 +305,18 @@ export default function SettingsScreen() {
               placeholder="http://<laptop-ip>:3333"
               autoCapitalize="none"
             />
-            {Platform.OS !== 'web' && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(serverUrl.trim()) ? (
+            {Platform.OS !== "web" &&
+            /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(
+              serverUrl.trim(),
+            ) ? (
               <Text style={{ color: palette.warning, fontSize: 12 }}>
-                Heads up: "localhost" only works on your laptop browser. On Android, replace "localhost" with your laptop's Wi-Fi IP (run "hostname -I" on Linux or "ipconfig" on Windows/macOS).
+                Heads up: "localhost" only works on your laptop browser. On
+                Android, replace "localhost" with your laptop's Wi-Fi IP (run
+                "hostname -I" on Linux or "ipconfig" on Windows/macOS).
               </Text>
             ) : null}
-            {Platform.OS === 'web' || detectDefaultServerUrl() !== DEFAULT_SERVER_URL ? (
+            {Platform.OS === "web" ||
+            detectDefaultServerUrl() !== DEFAULT_SERVER_URL ? (
               <Button
                 label={`Auto-detect URL (${detectDefaultServerUrl()})`}
                 size="sm"
@@ -275,15 +326,21 @@ export default function SettingsScreen() {
             ) : null}
 
             {connInfo ? (
-              <Text style={{ color: palette.success, fontSize: 12.5 }}>{connInfo}</Text>
+              <Text style={{ color: palette.success, fontSize: 12.5 }}>
+                {connInfo}
+              </Text>
             ) : null}
             {connError ? (
-              <Text style={{ color: palette.danger, fontSize: 12.5 }}>{connError}</Text>
+              <Text style={{ color: palette.danger, fontSize: 12.5 }}>
+                {connError}
+              </Text>
             ) : null}
 
-            {mode === 'server' ? (
+            {mode === "server" ? (
               <Text style={{ color: palette.textMuted, fontSize: 12 }}>
-                In Server Proxy mode, Redmine, GitHub, AI keys, Google Calendar, and Google Sheets are read directly from your DevPilot server (.env + OAuth tokens).
+                In Server Proxy mode, Redmine, GitHub, AI keys, Google Calendar,
+                and Google Sheets are read directly from your DevPilot server
+                (.env + OAuth tokens).
               </Text>
             ) : null}
 
@@ -323,7 +380,11 @@ export default function SettingsScreen() {
               autoCapitalize="none"
             />
 
-            <Button label={saving ? 'Saving…' : 'Save & Test Connection'} loading={saving} onPress={handleSave} />
+            <Button
+              label={saving ? "Saving…" : "Save & Test Connection"}
+              loading={saving}
+              onPress={handleSave}
+            />
           </View>
         </Card>
 
@@ -341,56 +402,115 @@ export default function SettingsScreen() {
             }
           />
           <View style={styles.body}>
-            <View style={[styles.queueRow, { backgroundColor: palette.surface2, borderColor: palette.borderSubtle }]}>
+            <View
+              style={[
+                styles.queueRow,
+                {
+                  backgroundColor: palette.surface2,
+                  borderColor: palette.borderSubtle,
+                },
+              ]}
+            >
               <View style={styles.queueTop}>
-                <Text style={{ color: palette.text, fontWeight: '700', fontSize: 13.5 }}>Google Calendar</Text>
+                <Text
+                  style={{
+                    color: palette.text,
+                    fontWeight: "700",
+                    fontSize: 13.5,
+                  }}
+                >
+                  Google Calendar
+                </Text>
                 <Badge
                   label={
                     googleStatus?.cal?.connected
-                      ? `Connected · ${googleStatus.cal.email || 'Active'}`
+                      ? `Connected · ${googleStatus.cal.email || "Active"}`
                       : googleStatus?.cal?.configured
-                        ? 'Not logged in'
+                        ? "Not logged in"
                         : googleStatus?.cal
-                          ? 'Needs Client ID'
-                          : 'Server unreachable'
+                          ? "Needs Client ID"
+                          : "Server unreachable"
                   }
-                  tone={googleStatus?.cal?.connected ? 'success' : 'warning'}
+                  tone={googleStatus?.cal?.connected ? "success" : "warning"}
                 />
               </View>
               <View style={styles.row2}>
                 <Button
-                  label={googleStatus?.cal?.connected ? 'Reconnect Google Calendar' : 'Login Google Calendar'}
+                  label={
+                    googleStatus?.cal?.connected
+                      ? "Reconnect Google Calendar"
+                      : "Login Google Calendar"
+                  }
                   size="sm"
-                  onPress={() => Linking.openURL(RedmineClient.getCalendarConnectUrl(currentCfgForGoogle, returnToUrl))}
+                  onPress={() =>
+                    Linking.openURL(
+                      RedmineClient.getCalendarConnectUrl(
+                        currentCfgForGoogle,
+                        returnToUrl,
+                      ),
+                    )
+                  }
                   style={{ flex: 1 }}
                 />
                 {googleStatus?.cal?.connected ? (
-                  <Button label="Disconnect" size="sm" variant="ghost" onPress={handleDisconnectCal} />
+                  <Button
+                    label="Disconnect"
+                    size="sm"
+                    variant="ghost"
+                    onPress={handleDisconnectCal}
+                  />
                 ) : null}
               </View>
             </View>
 
-            <View style={[styles.queueRow, { backgroundColor: palette.surface2, borderColor: palette.borderSubtle }]}>
+            <View
+              style={[
+                styles.queueRow,
+                {
+                  backgroundColor: palette.surface2,
+                  borderColor: palette.borderSubtle,
+                },
+              ]}
+            >
               <View style={styles.queueTop}>
-                <Text style={{ color: palette.text, fontWeight: '700', fontSize: 13.5 }}>Google Sheets (EOD)</Text>
+                <Text
+                  style={{
+                    color: palette.text,
+                    fontWeight: "700",
+                    fontSize: 13.5,
+                  }}
+                >
+                  Google Sheets (EOD)
+                </Text>
                 <Badge
                   label={
                     googleStatus?.sheets?.connected
-                      ? `Connected · ${googleStatus.sheets.email || 'Active'}`
+                      ? `Connected · ${googleStatus.sheets.email || "Active"}`
                       : googleStatus?.sheets?.configured
-                        ? 'Not logged in'
+                        ? "Not logged in"
                         : googleStatus?.sheets
-                          ? 'Needs Client ID'
-                          : 'Server unreachable'
+                          ? "Needs Client ID"
+                          : "Server unreachable"
                   }
-                  tone={googleStatus?.sheets?.connected ? 'success' : 'warning'}
+                  tone={googleStatus?.sheets?.connected ? "success" : "warning"}
                 />
               </View>
               <View style={styles.row2}>
                 <Button
-                  label={googleStatus?.sheets?.connected ? 'Reconnect Google Sheets' : 'Login Google Sheets'}
+                  label={
+                    googleStatus?.sheets?.connected
+                      ? "Reconnect Google Sheets"
+                      : "Login Google Sheets"
+                  }
                   size="sm"
-                  onPress={() => Linking.openURL(RedmineClient.getSheetsConnectUrl(currentCfgForGoogle, returnToUrl))}
+                  onPress={() =>
+                    Linking.openURL(
+                      RedmineClient.getSheetsConnectUrl(
+                        currentCfgForGoogle,
+                        returnToUrl,
+                      ),
+                    )
+                  }
                   style={{ flex: 1 }}
                 />
                 {googleStatus?.sheets?.sheet_url ? (
@@ -398,18 +518,27 @@ export default function SettingsScreen() {
                     label="Open Sheet"
                     size="sm"
                     variant="ghost"
-                    onPress={() => Linking.openURL(googleStatus.sheets!.sheet_url!)}
+                    onPress={() =>
+                      Linking.openURL(googleStatus.sheets!.sheet_url!)
+                    }
                   />
                 ) : null}
                 {googleStatus?.sheets?.connected ? (
-                  <Button label="Disconnect" size="sm" variant="ghost" onPress={handleDisconnectSheets} />
+                  <Button
+                    label="Disconnect"
+                    size="sm"
+                    variant="ghost"
+                    onPress={handleDisconnectSheets}
+                  />
                 ) : null}
               </View>
             </View>
 
             {googleStatus?.googleConfig ? (
               <Text style={{ color: palette.textMuted, fontSize: 12 }}>
-                Server OAuth Client: {googleStatus.googleConfig.client_id_masked || 'not set'} · Redirect: {googleStatus.googleConfig.redirect_uri}
+                Server OAuth Client:{" "}
+                {googleStatus.googleConfig.client_id_masked || "not set"} ·
+                Redirect: {googleStatus.googleConfig.redirect_uri}
               </Text>
             ) : null}
 
@@ -435,7 +564,7 @@ export default function SettingsScreen() {
               autoCapitalize="none"
             />
             <Button
-              label={savingGoogle ? 'Saving…' : 'Save Google App Config'}
+              label={savingGoogle ? "Saving…" : "Save Google App Config"}
               variant="ghost"
               loading={savingGoogle}
               onPress={handleSaveGoogleApp}
@@ -447,28 +576,62 @@ export default function SettingsScreen() {
           <CardHeader
             title="Offline Sync Queue (SQLite Outbox)"
             subtitle={`${queueItems.length} pending or failed operation(s)`}
-            right={<Button label="Retry All" size="sm" variant="ghost" onPress={flushOutbox} />}
+            right={
+              <Button
+                label="Retry All"
+                size="sm"
+                variant="ghost"
+                onPress={flushOutbox}
+              />
+            }
           />
           <View style={styles.body}>
             {!queueItems.length ? (
-              <Text style={{ color: palette.textMuted, fontSize: 13 }}>All changes are synced with Redmine.</Text>
+              <Text style={{ color: palette.textMuted, fontSize: 13 }}>
+                All changes are synced with Redmine.
+              </Text>
             ) : (
-              queueItems.map(item => (
+              queueItems.map((item) => (
                 <View
                   key={item.id}
-                  style={[styles.queueRow, { backgroundColor: palette.surface2, borderColor: palette.borderSubtle }]}
+                  style={[
+                    styles.queueRow,
+                    {
+                      backgroundColor: palette.surface2,
+                      borderColor: palette.borderSubtle,
+                    },
+                  ]}
                 >
                   <View style={styles.queueTop}>
-                    <Text style={{ color: palette.text, fontWeight: '700', fontSize: 13 }}>{item.op_type}</Text>
+                    <Text
+                      style={{
+                        color: palette.text,
+                        fontWeight: "700",
+                        fontSize: 13,
+                      }}
+                    >
+                      {item.op_type}
+                    </Text>
                     <Badge
                       label={item.status}
-                      tone={item.status === 'failed' ? 'danger' : item.status === 'syncing' ? 'primary' : 'warning'}
+                      tone={
+                        item.status === "failed"
+                          ? "danger"
+                          : item.status === "syncing"
+                            ? "primary"
+                            : "warning"
+                      }
                     />
                   </View>
                   {item.last_error ? (
-                    <Text style={{ color: palette.danger, fontSize: 12 }}>{item.last_error}</Text>
+                    <Text style={{ color: palette.danger, fontSize: 12 }}>
+                      {item.last_error}
+                    </Text>
                   ) : null}
-                  <Text style={{ color: palette.textMuted, fontSize: 11.5 }} numberOfLines={2}>
+                  <Text
+                    style={{ color: palette.textMuted, fontSize: 11.5 }}
+                    numberOfLines={2}
+                  >
                     {item.payload_json}
                   </Text>
                   <Button
@@ -487,11 +650,15 @@ export default function SettingsScreen() {
           <CardHeader title="Appearance & Storage" />
           <View style={styles.body}>
             <Button
-              label={`Switch to ${themeMode === 'dark' ? 'Light' : 'Dark'} Theme`}
+              label={`Switch to ${themeMode === "dark" ? "Light" : "Dark"} Theme`}
               variant="ghost"
               onPress={toggleTheme}
             />
-            <Button label="Clear Cached SQLite Data" variant="danger" onPress={handleClearCache} />
+            <Button
+              label="Clear Cached SQLite Data"
+              variant="danger"
+              onPress={handleClearCache}
+            />
           </View>
         </Card>
       </ScreenScroll>
@@ -511,15 +678,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   queueTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 8,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   row2: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
 });

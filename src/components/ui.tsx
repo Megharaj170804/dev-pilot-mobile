@@ -14,7 +14,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { RADII, SPACING } from '../constants/theme';
-import { useApp } from '../context/AppContext';
+import { useApp, useThemePalette } from '../context/AppContext';
 import { parseTextileBlocks } from '../domain/redmineUtils';
 
 export function Card({
@@ -24,7 +24,7 @@ export function Card({
   children: React.ReactNode;
   style?: ViewStyle;
 }) {
-  const { palette } = useApp();
+  const { palette } = useThemePalette();
   return (
     <View
       style={[
@@ -47,7 +47,7 @@ export function CardHeader({
   subtitle?: string;
   right?: React.ReactNode;
 }) {
-  const { palette } = useApp();
+  const { palette } = useThemePalette();
   return (
     <View style={[styles.cardHeader, { borderBottomColor: palette.borderSubtle }]}>
       <View style={styles.cardHeaderText}>
@@ -64,7 +64,7 @@ export function CardHeader({
 export type BadgeTone = 'neutral' | 'primary' | 'success' | 'warning' | 'danger' | 'epic';
 
 export function Badge({ label, tone = 'neutral' }: { label: string; tone?: BadgeTone }) {
-  const { palette } = useApp();
+  const { palette } = useThemePalette();
   const colors: Record<BadgeTone, { bg: string; fg: string }> = {
     neutral: { bg: palette.surface3, fg: palette.text2 },
     primary: { bg: palette.primaryMuted, fg: palette.primaryInk },
@@ -102,7 +102,7 @@ export function Button({
   icon?: keyof typeof Ionicons.glyphMap;
   style?: ViewStyle;
 }) {
-  const { palette } = useApp();
+  const { palette } = useThemePalette();
   const bgMap = {
     primary: palette.primary,
     ghost: palette.surface2,
@@ -159,7 +159,7 @@ export function SegmentedControl<T extends string>({
   value: T;
   onChange: (val: T) => void;
 }) {
-  const { palette } = useApp();
+  const { palette } = useThemePalette();
   return (
     <View style={[styles.segWrap, { backgroundColor: palette.surface2, borderColor: palette.border }]}>
       {options.map(opt => {
@@ -198,7 +198,7 @@ export function Chip({
   active?: boolean;
   onPress: () => void;
 }) {
-  const { palette } = useApp();
+  const { palette } = useThemePalette();
   return (
     <Pressable
       onPress={onPress}
@@ -227,7 +227,7 @@ export function FieldInput({
   hint,
   ...props
 }: TextInputProps & { label?: string; hint?: string }) {
-  const { palette } = useApp();
+  const { palette } = useThemePalette();
   return (
     <View style={styles.fieldWrap}>
       {label ? <Text style={[styles.fieldLabel, { color: palette.text2 }]}>{label}</Text> : null}
@@ -261,7 +261,7 @@ export function EmptyState({
   actionLabel?: string;
   onAction?: () => void;
 }) {
-  const { palette } = useApp();
+  const { palette } = useThemePalette();
   return (
     <View style={styles.emptyWrap}>
       <Text style={[styles.emptyTitle, { color: palette.text }]}>{title}</Text>
@@ -310,7 +310,7 @@ export function OfflineBanner({ onPressQueue }: { onPressQueue?: () => void }) {
 }
 
 export function TextilePreview({ text }: { text: string }) {
-  const { palette } = useApp();
+  const { palette } = useThemePalette();
   const blocks = parseTextileBlocks(text);
   if (!blocks.length) {
     return <Text style={{ color: palette.textSubtle, fontStyle: 'italic' }}>(empty)</Text>;
@@ -381,13 +381,13 @@ export function SelectField<T extends string | number>({
   placeholder?: string;
   onChange: (val: T) => void;
 }) {
-  const { palette } = useApp();
+  const { palette } = useThemePalette();
   const [open, setOpen] = React.useState(false);
   const selected = options.find(o => o.value === value);
 
   return (
     <View style={styles.fieldWrap}>
-      <Text style={[styles.fieldLabel, { color: palette.text2 }]}>{label}</Text>
+      {label ? <Text style={[styles.fieldLabel, { color: palette.text2 }]}>{label}</Text> : null}
       <Pressable
         onPress={() => setOpen(true)}
         style={[
@@ -404,45 +404,47 @@ export function SelectField<T extends string | number>({
         <Ionicons name="chevron-down" size={16} color={palette.textMuted} />
       </Pressable>
 
-      <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setOpen(false)}>
-          <Pressable style={[styles.pickerSheet, { backgroundColor: palette.panel, borderColor: palette.borderStrong }]}>
-            <View style={[styles.pickerHead, { borderBottomColor: palette.borderSubtle }]}>
-              <Text style={[styles.cardTitle, { color: palette.text }]}>{label}</Text>
-              <Button label="Done" size="sm" variant="ghost" onPress={() => setOpen(false)} />
-            </View>
-            <FlatList
-              data={options}
-              keyExtractor={item => String(item.value)}
-              style={{ maxHeight: 380 }}
-              renderItem={({ item }) => {
-                const active = item.value === value;
-                return (
-                  <Pressable
-                    onPress={() => {
-                      onChange(item.value);
-                      setOpen(false);
-                    }}
-                    style={[
-                      styles.pickerRow,
-                      { borderBottomColor: palette.borderSubtle },
-                      active && { backgroundColor: palette.primaryMuted },
-                    ]}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ color: active ? palette.primaryInk : palette.text, fontWeight: active ? '600' : '400', fontSize: 14 }}>
-                        {item.label}
-                      </Text>
-                      {item.sub ? <Text style={{ color: palette.textMuted, fontSize: 12 }}>{item.sub}</Text> : null}
-                    </View>
-                    {active ? <Ionicons name="checkmark" size={18} color={palette.primaryInk} /> : null}
-                  </Pressable>
-                );
-              }}
-            />
+      {open ? (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setOpen(false)}>
+            <Pressable style={[styles.pickerSheet, { backgroundColor: palette.panel, borderColor: palette.borderStrong }]}>
+              <View style={[styles.pickerHead, { borderBottomColor: palette.borderSubtle }]}>
+                <Text style={[styles.cardTitle, { color: palette.text }]}>{label || placeholder}</Text>
+                <Button label="Done" size="sm" variant="ghost" onPress={() => setOpen(false)} />
+              </View>
+              <FlatList
+                data={options}
+                keyExtractor={item => String(item.value)}
+                style={{ maxHeight: 380 }}
+                renderItem={({ item }) => {
+                  const active = item.value === value;
+                  return (
+                    <Pressable
+                      onPress={() => {
+                        onChange(item.value);
+                        setOpen(false);
+                      }}
+                      style={[
+                        styles.pickerRow,
+                        { borderBottomColor: palette.borderSubtle },
+                        active && { backgroundColor: palette.primaryMuted },
+                      ]}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: active ? palette.primaryInk : palette.text, fontWeight: active ? '600' : '400', fontSize: 14 }}>
+                          {item.label}
+                        </Text>
+                        {item.sub ? <Text style={{ color: palette.textMuted, fontSize: 12 }}>{item.sub}</Text> : null}
+                      </View>
+                      {active ? <Ionicons name="checkmark" size={18} color={palette.primaryInk} /> : null}
+                    </Pressable>
+                  );
+                }}
+              />
+            </Pressable>
           </Pressable>
-        </Pressable>
-      </Modal>
+        </Modal>
+      ) : null}
     </View>
   );
 }
@@ -464,7 +466,7 @@ export function ScreenScroll({
   children: React.ReactNode;
   refreshControl?: React.ReactElement;
 }) {
-  const { palette } = useApp();
+  const { palette } = useThemePalette();
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: palette.bg }}

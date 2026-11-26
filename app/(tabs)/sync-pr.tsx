@@ -1,6 +1,7 @@
+import { useIsFocused } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { InteractionManager, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
 import {
   Badge,
@@ -43,8 +44,14 @@ import type {
 
 export default function SyncPrScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const params = useLocalSearchParams<{ url?: string }>();
   const { palette, config, isOnline, syncVersion, showToast } = useApp();
+  const lastSyncVersionRef = useRef(-1);
+  const idsRef = useRef<{ projectId: number | null; assigneeId: number | null }>({
+    projectId: null,
+    assigneeId: null,
+  });
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [prUrl, setPrUrl] = useState('');
@@ -80,6 +87,9 @@ export default function SyncPrScreen() {
 
   const pushLog = (msg: string) => setActivityLogs(prev => [...prev, `${new Date().toLocaleTimeString()} · ${msg}`]);
 
+  idsRef.current.projectId = projectId;
+  idsRef.current.assigneeId = assigneeId;
+
   const loadRefs = useCallback(async () => {
     const [cachedMe, cachedProjects, cachedHist] = await Promise.all([
       ReferenceRepo.getMe(),
@@ -89,9 +99,15 @@ export default function SyncPrScreen() {
     setMe(cachedMe);
     setProjects(cachedProjects);
     setHistory(cachedHist);
-    const pid = projectId || cachedMe?.default_project_id || cachedProjects[0]?.id || null;
-    if (pid && !projectId) setProjectId(pid);
-    if (!assigneeId && cachedMe) setAssigneeId(cachedMe.id);
+    const pid = idsRef.current.projectId || cachedMe?.default_project_id || cachedProjects[0]?.id || null;
+    if (pid && !idsRef.current.projectId) {
+      idsRef.current.projectId = pid;
+      setProjectId(pid);
+    }
+    if (!idsRef.current.assigneeId && cachedMe) {
+      idsRef.current.assigneeId = cachedMe.id;
+      setAssigneeId(cachedMe.id);
+    }
     if (pid) {
       const [mems, feats] = await Promise.all([
         ReferenceRepo.getProjectMembers(pid),
@@ -100,11 +116,17 @@ export default function SyncPrScreen() {
       setMembers(mems);
       setFeatures(feats);
     }
-  }, [projectId, assigneeId]);
+  }, []);
 
   useEffect(() => {
-    loadRefs();
-  }, [loadRefs, syncVersion]);
+    if (!isFocused) return;
+    if (lastSyncVersionRef.current === syncVersion) return;
+    lastSyncVersionRef.current = syncVersion;
+    const handle = InteractionManager.runAfterInteractions(() => {
+      loadRefs();
+    });
+    return () => handle.cancel();
+  }, [isFocused, loadRefs, syncVersion]);
 
   const handleProjectSelect = async (newPid: number) => {
     setProjectId(newPid);

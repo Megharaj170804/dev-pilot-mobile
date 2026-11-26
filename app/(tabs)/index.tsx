@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useIsFocused } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Linking, Platform } from 'react-native';
 import { LogTimeModal } from '../../src/components/LogTimeModal';
@@ -18,7 +19,7 @@ import {
   SegmentedControl,
   SelectField,
 } from '../../src/components/ui';
-import { AUDIT_LOOKBACK_DAYS, DAILY_BRIEF_LOOKBACK_DAYS, DAILY_TARGET_HOURS } from '../../src/constants/config';
+import { AUDIT_LOOKBACK_DAYS, DAILY_BRIEF_LOOKBACK_DAYS, DAILY_TARGET_HOURS, INITIAL_DISPLAY_LIMIT } from '../../src/constants/config';
 import { RADII, SPACING } from '../../src/constants/theme';
 import { useApp } from '../../src/context/AppContext';
 import {
@@ -51,7 +52,9 @@ const isFeedbackStatus = (st: string | null) => /feedback/i.test(st || '');
 
 export default function DailyWorkspaceScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const { palette, config, isOnline, syncVersion, syncNow, showToast } = useApp();
+  const lastSyncVersionRef = useRef(-1);
 
   const [tasks, setTasks] = useState<TrackerNode[]>([]);
   const [statuses, setStatuses] = useState<IssueStatus[]>([]);
@@ -62,6 +65,7 @@ export default function DailyWorkspaceScreen() {
 
   const [taskFilter, setTaskFilter] = useState<TaskFilter>('progress');
   const [auditFilter, setAuditFilter] = useState<AuditFilter>('missing');
+  const [showAllTasks, setShowAllTasks] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [composeMode, setComposeMode] = useState<ComposeMode>('eod');
   const [composedText, setComposedText] = useState('');
@@ -102,8 +106,11 @@ export default function DailyWorkspaceScreen() {
   }, [todayStr]);
 
   useEffect(() => {
+    if (!isFocused) return;
+    if (lastSyncVersionRef.current === syncVersion) return;
+    lastSyncVersionRef.current = syncVersion;
     loadFromSqlite();
-  }, [loadFromSqlite, syncVersion]);
+  }, [isFocused, loadFromSqlite, syncVersion]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -125,6 +132,16 @@ export default function DailyWorkspaceScreen() {
     if (!q) return sorted;
     return sorted.filter(t => `#${t.id} ${t.subject} ${t.status || ''}`.toLowerCase().includes(q));
   }, [tasks, taskFilter, searchQuery]);
+
+  const statusOptions = useMemo(
+    () => statuses.map(s => ({ value: s.id, label: s.name })),
+    [statuses]
+  );
+
+  const visibleTasks = useMemo(
+    () => (showAllTasks ? filteredTasks : filteredTasks.slice(0, INITIAL_DISPLAY_LIMIT)),
+    [filteredTasks, showAllTasks]
+  );
 
   const todayEntries = useMemo(
     () => entries30.filter(e => e.spent_on === todayStr),
@@ -273,7 +290,7 @@ export default function DailyWorkspaceScreen() {
               />
             ) : (
               <View style={styles.listGap}>
-                {filteredTasks.map(t => (
+                {visibleTasks.map(t => (
                   <View
                     key={t.id}
                     style={[
@@ -308,7 +325,7 @@ export default function DailyWorkspaceScreen() {
                         <SelectField
                           label=""
                           value={t.status_id}
-                          options={statuses.map(s => ({ value: s.id, label: s.name }))}
+                          options={statusOptions}
                           placeholder={t.status || 'Status'}
                           onChange={val => handleStatusChange(t.id, val)}
                         />
@@ -339,6 +356,14 @@ export default function DailyWorkspaceScreen() {
                     </View>
                   </View>
                 ))}
+                {!showAllTasks && filteredTasks.length > INITIAL_DISPLAY_LIMIT ? (
+                  <Button
+                    label={`Show all ${filteredTasks.length} tasks`}
+                    size="sm"
+                    variant="ghost"
+                    onPress={() => setShowAllTasks(true)}
+                  />
+                ) : null}
               </View>
             )}
           </View>

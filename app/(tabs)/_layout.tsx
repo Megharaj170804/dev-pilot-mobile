@@ -11,6 +11,8 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         lazy: true,
+        freezeOnBlur: true,
+        animation: 'none',
         tabBarStyle: {
           backgroundColor: palette.bgElevated,
           borderTopColor: palette.borderSubtle,

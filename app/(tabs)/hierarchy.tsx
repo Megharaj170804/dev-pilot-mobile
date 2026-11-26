@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Linking, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { InteractionManager, Linking, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { LogTimeModal } from '../../src/components/LogTimeModal';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
@@ -44,10 +45,14 @@ const RING_RADIUS = 33;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 export default function WorkHierarchyScreen() {
+  const isFocused = useIsFocused();
   const { palette, config, isOnline, syncVersion, syncNow, showToast } = useApp();
 
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
+  const activeProjectIdRef = useRef<number | null>(null);
+  const lastSyncVersionRef = useRef(-1);
+  activeProjectIdRef.current = activeProjectId;
   const [nodes, setNodes] = useState<TrackerNode[]>([]);
   const [statuses, setStatuses] = useState<IssueStatus[]>([]);
   const [activities, setActivities] = useState<TimeActivity[]>([]);
@@ -84,22 +89,31 @@ export default function WorkHierarchyScreen() {
     setFeed(feedItems);
 
     const pid =
-      activeProjectId ||
+      activeProjectIdRef.current ||
       (savedPid ? Number(savedPid) : 0) ||
       cachedMe?.default_project_id ||
       cachedProjects[0]?.id ||
       null;
 
     if (pid) {
-      if (!activeProjectId) setActiveProjectId(pid);
+      if (!activeProjectIdRef.current) {
+        activeProjectIdRef.current = pid;
+        setActiveProjectId(pid);
+      }
       const projectNodes = await IssuesRepo.getAll(pid);
       setNodes(projectNodes);
     }
-  }, [activeProjectId]);
+  }, []);
 
   useEffect(() => {
-    loadFromSqlite();
-  }, [loadFromSqlite, syncVersion]);
+    if (!isFocused) return;
+    if (lastSyncVersionRef.current === syncVersion) return;
+    lastSyncVersionRef.current = syncVersion;
+    const handle = InteractionManager.runAfterInteractions(() => {
+      loadFromSqlite();
+    });
+    return () => handle.cancel();
+  }, [isFocused, loadFromSqlite, syncVersion]);
 
   const handleProjectChange = async (pid: number) => {
     setActiveProjectId(pid);

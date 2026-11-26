@@ -35,6 +35,13 @@ interface AppContextValue {
   showToast: (text: string) => void;
 }
 
+interface ThemeContextValue {
+  themeMode: ThemeMode;
+  palette: ThemePalette;
+  toggleTheme: () => Promise<void>;
+}
+
+const ThemeContext = createContext<ThemeContextValue | null>(null);
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -204,6 +211,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const palette = useMemo(() => (themeMode === 'light' ? LIGHT_PALETTE : DARK_PALETTE), [themeMode]);
 
+  const themeValue = useMemo<ThemeContextValue>(
+    () => ({
+      themeMode,
+      palette,
+      toggleTheme,
+    }),
+    [themeMode, palette, toggleTheme]
+  );
+
   const value = useMemo<AppContextValue>(
     () => ({
       dbReady,
@@ -244,7 +260,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ]
   );
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <ThemeContext.Provider value={themeValue}>
+      <AppContext.Provider value={value}>{children}</AppContext.Provider>
+    </ThemeContext.Provider>
+  );
+}
+
+export function useThemePalette(): ThemeContextValue {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error('useThemePalette must be used inside AppProvider');
+  return ctx;
 }
 
 export function useApp(): AppContextValue {
