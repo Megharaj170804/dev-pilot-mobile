@@ -1,48 +1,110 @@
-# DevPilot Mobile — Offline-First Developer Workflow App
+<div align="center">
 
-React Native (Expo Router + TypeScript + `expo-sqlite`) mobile and web companion for **DevPilot**, engineered for full feature parity with the web platform and complete offline operation.
+<img src="assets/icon.png" alt="DevPilot Mobile Icon" width="110" />
 
-## Features (100% Parity + Offline-First SQLite)
+# DevPilot Mobile
 
-1. **Daily Workspace (`app/(tabs)/index.tsx`)**
-   - In-Progress / Pinned / All Open Redmine task queue with star pins and inline status updates
-   - Today's time breakdown against an 8h daily target + 30-day weekday 8h audit with 1-tap catch-up logging
-   - Today's Google Calendar meetings + Standup & EOD Composer (AI + offline formatter)
-2. **PR → Redmine Sync (`app/(tabs)/sync-pr.tsx`)**
-   - 3-step PR import wizard (Paste PR URL → AI / Smart Template Generation → Preview & Create)
-   - Redmine Textile Edit & Preview tabs, duplicate PR guard, and Sync History
-3. **Quick Task (`app/(tabs)/quick-task.tsx`)**
-   - Presets & Google Calendar meeting prefill, AI/template drafting, parent feature & target version pickers, and 1-tap issue creation + time logging
-4. **Work Hierarchy (`app/(tabs)/hierarchy.tsx`)**
-   - Collapsible Epic → Feature → Task/Bug Outline, Kanban Board, Live Activity Feed, 6 KPI tiles, SVG Today ring + 7-day bar chart, and Issue Detail drawer
-5. **PR Comments (`app/pr-comments.tsx`)**
-   - Fetches conversation, inline review, and review summary comments, filters by author / latest round, and builds Claude Code / Antigravity / generic agent fix prompts
-6. **KPI Comments (`app/kpi-comments.tsx`)**
-   - Monthly (21st → 20th) Redmine KPI generator with DIR (`3.1`) and Standards (`1.1`) calculators, filtered Redmine links, and 1-line AI/local note drafting
-7. **EOD Updates Sheet (`app/eod-updates.tsx`)**
-   - Offline-cached Google Sheet viewer and editor with multi-tab switching, month filter, Pull Today from Redmine, Add / Edit / Duplicate / Delete row, and TSV export
-8. **Settings, Outbox & About (`app/settings.tsx`, `app/about.tsx`)**
-   - **DevPilot Server Proxy** mode (shares identical Redmine, History, AI, Google Calendar, and Google Sheets data with the web app) and **Direct REST** mode
-   - Google Calendar & Google Sheets OAuth login/disconnect + Google Client ID / EOD Sheet ID configuration
-   - Durable `sync_queue` SQLite outbox inspector, Apple Pro Dark / Studio Light themes, and About DevPilot guide
+**Offline-first Android, iOS & Web companion for [PR-TO-Tracker (DevPilot)](https://github.com/Megharaj170804/PR-TO-Tracker)**
 
-## Offline Architecture
+[![Expo SDK](https://img.shields.io/badge/Expo-SDK%2052-000020?logo=expo&logoColor=white)](package.json)
+[![React Native](https://img.shields.io/badge/React%20Native-0.76-61DAFB?logo=react&logoColor=black)](package.json)
+[![SQLite](https://img.shields.io/badge/Storage-expo--sqlite%20WAL-003B57?logo=sqlite&logoColor=white)](src/db/schema.ts)
+[![Android Bundle](https://img.shields.io/badge/Android-.aab%20%2F%20.apk-3DDC84?logo=android&logoColor=white)](docs/BUILD_AND_RELEASE.md)
 
-- **Native (iOS / Android):** Uses `expo-sqlite` in WAL mode (`src/db/schema.ts`, `src/db/repositories.ts`) with a serialized transaction mutex (`runInTransaction`) and `expo-secure-store` for credentials.
-- **Web:** Uses `localStorage` adapters (`src/db/schema.web.ts`, `src/db/repositories.web.ts`) resolved automatically by Metro.
-- **Outbox Sync (`src/services/syncEngine.ts`):** Status changes, time entries, PR tasks, Quick Tasks, and EOD sheet edits made offline apply optimistically and replay sequentially when `@react-native-community/netinfo` detects reconnection.
+</div>
+
+---
+
+DevPilot Mobile brings your full engineering workflow — **Redmine time logging, 30-day 8h audits, Google Calendar meetings, GitHub PR -> Redmine conversion, Work Hierarchy, EOD Google Sheets, PR Review comments, and KPI Reflections** — into a fast, animated-splash mobile app that keeps working offline and syncs automatically when connectivity returns.
+
+---
+
+## Key Capabilities
+
+| Screen | What It Does | Works Offline |
+| --- | --- | --- |
+| **Today (Daily Workspace)** | 8h daily meter, 30-day weekday audit, Google Calendar meetings & Meet links, AI Standup/EOD composer | Cached audits, issues & standup drafting; time logs queue |
+| **PR Sync** | Fetch GitHub PR commits/diffs, AI-generate Redmine fields, create linked issues | Reads `pr_cache`; queues `CREATE_ISSUE` |
+| **Quick Task** | Instant Redmine task creation with presets (`0.5h–8h` chips) & AI note expansion | Queues `CREATE_QUICK_TASK` |
+| **Work Hierarchy** | Collapsible Epic -> Story -> Task -> Bug tree, live status updates & activity feed | Reads cached tree; queues `UPDATE_ISSUE_STATUS` |
+| **EOD Updates** | Multi-tab Google Sheets viewer, cell editor & new daily row entry | Edits queue via `SHEETS_*` ops |
+| **PR Comments** | Turn GitHub PR review discussions into clean Redmine updates | Reads cached PRs |
+| **KPI Reflection** | Periodic KPI note drafting persisted per period (`kpi_drafts`) | Fully persisted in SQLite |
+| **Settings & About** | Server Proxy / Direct switch, Google OAuth setup, Outbox retry queue, Theme toggle & About | Full queue inspection |
+
+---
+
+## Offline + Live Server Sync Architecture
+
+```mermaid
+flowchart LR
+  UI["Expo Router UI (Tabs + Tools)"] --> Sync["syncEngine.ts (Optimistic Writes)"]
+  Sync --> DB[("SQLite WAL (devpilot_offline.db) / localStorage (Web)")]
+  Sync --> Queue["sync_queue Outbox"]
+  Net["NetInfo Connectivity"] -->|"Online -> Replay FIFO"| Queue
+  Queue --> Mode{"Connection Mode"}
+  Mode -->|"Server Proxy (Recommended)"| Server["DevPilot server.js :3333"]
+  Mode -->|"Direct REST"| External["Redmine / GitHub / Gemini & Groq"]
+  Server --> Shared["Shared .env + Google Calendar & Sheets OAuth"]
+```
+
+---
 
 ## Quick Start
 
+### 1. Install Dependencies
 ```bash
+git clone https://github.com/Megharaj170804/dev-pilot-mobile.git
+cd dev-pilot-mobile
 npm install
-npm run typecheck
-npx expo start
 ```
 
-- Press `w` for Web (`http://localhost:8081`) or scan the QR code in **Expo Go** on Android/iOS.
-- To share live data, Google Calendar, and Google Sheets with the DevPilot web server (`pr-to-tracker`), run `npm start` in the web repo and select **DevPilot Server Proxy** in **Settings**.
+### 2. Run Locally
+```bash
+# Start Metro bundler (scan QR with Expo Go or press a/w)
+npm start
 
-## Building Android `.aab` & `.apk`
+# Run directly in browser
+npm run web
 
-See [BUILD_AND_RELEASE.md](./BUILD_AND_RELEASE.md) for both **EAS Cloud Build** (`eas build --platform android --profile production` for `.aab`) and **Local Gradle Build** (`npx expo prebuild --platform android && ./gradlew bundleRelease`).
+# Run Android emulator/device
+npm run android
+```
+
+### 3. Connect to DevPilot Web Server (Recommended)
+1. Start the companion backend in [PR-TO-Tracker](https://github.com/Megharaj170804/PR-TO-Tracker): `npm start`.
+2. Open **Settings -> Connection & Credentials** in DevPilot Mobile and pick **DevPilot Server Proxy**:
+   - **Web (`localhost:8081`):** `http://localhost:3333`
+   - **Physical Phone:** `http://<your-laptop-lan-ip>:3333`
+3. Tap **Save & Test Connection** — Redmine, GitHub, AI keys, Google Calendar, and Google Sheets sync automatically.
+
+---
+
+## Build Android `.aab` / `.apk`
+
+Preconfigured via `eas.json` (`net.tekdi.devpilot`):
+```bash
+# Cloud build signed Android App Bundle (.aab)
+eas build --platform android --profile production
+
+# Cloud build standalone APK (.apk) for direct installation
+eas build --platform android --profile preview
+```
+See [docs/BUILD_AND_RELEASE.md](docs/BUILD_AND_RELEASE.md) for EAS setup and local Gradle (`./gradlew bundleRelease`) instructions.
+
+---
+
+## Documentation (`docs/`)
+
+- [**Architecture Overview**](docs/ARCHITECTURE.md) — Navigation, modules, connection modes & SQLite concurrency mutex
+- [**Features Guide**](docs/FEATURES.md) — Detailed walkthrough of all 7 screens + Settings & About
+- [**Offline SQLite & Sync Queue**](docs/OFFLINE_SYNC.md) — 16-table schema, optimistic mutations & `sync_queue` replay
+- [**Build & Android Release Guide**](docs/BUILD_AND_RELEASE.md) — `.aab` and `.apk` generation via EAS or local Gradle
+
+---
+
+## Verification
+
+```bash
+npm run typecheck
+```
