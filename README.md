@@ -21,16 +21,16 @@ DevPilot Mobile brings your full engineering workflow — **Redmine time logging
 
 ## Key Capabilities
 
-| Screen | What It Does | Works Offline |
-| --- | --- | --- |
+| Screen                      | What It Does                                                                                         | Works Offline                                             |
+| --------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | **Today (Daily Workspace)** | 8h daily meter, 30-day weekday audit, Google Calendar meetings & Meet links, AI Standup/EOD composer | Cached audits, issues & standup drafting; time logs queue |
-| **PR Sync** | Fetch GitHub PR commits/diffs, AI-generate Redmine fields, create linked issues | Reads `pr_cache`; queues `CREATE_ISSUE` |
-| **Quick Task** | Instant Redmine task creation with presets (`0.5h–8h` chips) & AI note expansion | Queues `CREATE_QUICK_TASK` |
-| **Work Hierarchy** | Collapsible Epic -> Story -> Task -> Bug tree, live status updates & activity feed | Reads cached tree; queues `UPDATE_ISSUE_STATUS` |
-| **EOD Updates** | Multi-tab Google Sheets viewer, cell editor & new daily row entry | Edits queue via `SHEETS_*` ops |
-| **PR Comments** | Turn GitHub PR review discussions into clean Redmine updates | Reads cached PRs |
-| **KPI Reflection** | Periodic KPI note drafting persisted per period (`kpi_drafts`) | Fully persisted in SQLite |
-| **Settings & About** | Server Proxy / Direct switch, Google OAuth setup, Outbox retry queue, Theme toggle & About | Full queue inspection |
+| **PR Sync**                 | Fetch GitHub PR commits/diffs, AI-generate Redmine fields, create linked issues                      | Reads `pr_cache`; queues `CREATE_ISSUE`                   |
+| **Quick Task**              | Instant Redmine task creation with presets (`0.5h–8h` chips) & AI note expansion                     | Queues `CREATE_QUICK_TASK`                                |
+| **Work Hierarchy**          | Collapsible Epic -> Story -> Task -> Bug tree, live status updates & activity feed                   | Reads cached tree; queues `UPDATE_ISSUE_STATUS`           |
+| **EOD Updates**             | Multi-tab Google Sheets viewer, cell editor & new daily row entry                                    | Edits queue via `SHEETS_*` ops                            |
+| **PR Comments**             | Turn GitHub PR review discussions into clean Redmine updates                                         | Reads cached PRs                                          |
+| **KPI Reflection**          | Periodic KPI note drafting persisted per period (`kpi_drafts`)                                       | Fully persisted in SQLite                                 |
+| **Settings & About**        | Server Proxy / Direct switch, Google OAuth setup, Outbox retry queue, Theme toggle & About           | Full queue inspection                                     |
 
 ---
 
@@ -53,6 +53,7 @@ flowchart LR
 ## Quick Start
 
 ### 1. Install Dependencies
+
 ```bash
 git clone https://github.com/Megharaj170804/dev-pilot-mobile.git
 cd dev-pilot-mobile
@@ -60,6 +61,7 @@ npm install
 ```
 
 ### 2. Run Locally
+
 ```bash
 # Start Metro bundler (scan QR with Expo Go or press a/w)
 npm start
@@ -72,6 +74,7 @@ npm run android
 ```
 
 ### 3. Connect to DevPilot Web Server (Recommended)
+
 1. Start the companion backend in [PR-TO-Tracker](https://github.com/Megharaj170804/PR-TO-Tracker): `npm start`.
 2. Open **Settings -> Connection & Credentials** in DevPilot Mobile and pick **DevPilot Server Proxy**:
    - **Web (`localhost:8081`):** `http://localhost:3333`
@@ -82,10 +85,11 @@ npm run android
 
 ## Build Android `.aab` / `.apk`
 
-Preconfigured via `eas.json` (`net.tekdi.devpilot`) with `eas-cli` included in `devDependencies` (no `npm install -g` required):
+Preconfigured via `eas.json` (`net.tekdi.devpilot`) using `npx -y eas-cli` (no `npm install -g` required):
+
 ```bash
 # Authenticate once with Expo
-npx eas login
+npx -y eas-cli login
 
 # Cloud build signed Android App Bundle (.aab)
 npm run build:aab
@@ -93,6 +97,7 @@ npm run build:aab
 # Cloud build standalone APK (.apk) for direct installation
 npm run build:apk
 ```
+
 See [docs/BUILD_AND_RELEASE.md](docs/BUILD_AND_RELEASE.md) for EAS setup and local Gradle (`./gradlew bundleRelease`) instructions.
 
 ---

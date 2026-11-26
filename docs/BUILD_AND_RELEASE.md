@@ -16,23 +16,21 @@ DevPilot Mobile (`net.tekdi.devpilot`) is preconfigured in `eas.json` and `app.j
 
 ## Option A — Cloud Build via Expo EAS (Recommended, No Local Android SDK Required)
 
-> **No global `npm install -g eas-cli` needed:** `eas-cli` is included in `devDependencies`, so run it via `npx eas` or `npm run` inside `devpilot-mobile/` to avoid `EACCES: permission denied` on `/usr/local/lib/node_modules`.
+> **No global `npm install -g eas-cli` needed:** `expo-doctor` requires `eas-cli` NOT to be listed in `package.json`, so run it via `npx -y eas-cli` or `npm run build:aab` / `npm run build:apk` inside `devpilot-mobile/` to avoid both `EACCES` permission errors and `expo-doctor` warnings.
 
-1. Authenticate with your Expo account and link the project once inside `devpilot-mobile/`:
+1. Authenticate with your Expo account once inside `devpilot-mobile/`:
    ```bash
-   npx eas login
-   npx eas build:configure
+   npx -y eas-cli login
    ```
 2. Run your desired Android build:
-
    ```bash
    # Signed Android App Bundle (.aab)
    npm run build:aab
-   # or: npx eas build --platform android --profile production
+   # or: npx -y eas-cli build --platform android --profile production
 
    # Direct-install Android APK (.apk) for phone sideloading
    npm run build:apk
-   # or: npx eas build --platform android --profile preview
+   # or: npx -y eas-cli build --platform android --profile preview
    ```
 
 3. Download the generated `.aab` or `.apk` from the Expo build URL printed in your terminal.
