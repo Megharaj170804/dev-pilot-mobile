@@ -6,11 +6,11 @@ DevPilot Mobile (`net.tekdi.devpilot`) is preconfigured in `eas.json` and `app.j
 
 ## Build Profiles (`eas.json`)
 
-| Profile | Distribution | Output | Use Case |
-| --- | --- | --- | --- |
-| `development` | `internal` | Dev client | Local debugging with custom native modules |
-| `preview` | `internal` | `.apk` | Direct USB / download install onto your Android phone |
-| `production` | Store / Release | `.aab` (`app-bundle`) | Play Store upload or bundletool extraction |
+| Profile       | Distribution    | Output                | Use Case                                              |
+| ------------- | --------------- | --------------------- | ----------------------------------------------------- |
+| `development` | `internal`      | Dev client            | Local debugging with custom native modules            |
+| `preview`     | `internal`      | `.apk`                | Direct USB / download install onto your Android phone |
+| `production`  | Store / Release | `.aab` (`app-bundle`) | Play Store upload or bundletool extraction            |
 
 ---
 
@@ -24,6 +24,7 @@ DevPilot Mobile (`net.tekdi.devpilot`) is preconfigured in `eas.json` and `app.j
    npx eas build:configure
    ```
 2. Run your desired Android build:
+
    ```bash
    # Signed Android App Bundle (.aab)
    npm run build:aab
@@ -33,9 +34,11 @@ DevPilot Mobile (`net.tekdi.devpilot`) is preconfigured in `eas.json` and `app.j
    npm run build:apk
    # or: npx eas build --platform android --profile preview
    ```
+
 3. Download the generated `.aab` or `.apk` from the Expo build URL printed in your terminal.
 
 > **If you prefer a global `eas` binary without `sudo`:**
+>
 > ```bash
 > mkdir -p ~/.npm-global
 > npm config set prefix ~/.npm-global
@@ -53,6 +56,7 @@ DevPilot Mobile (`net.tekdi.devpilot`) is preconfigured in `eas.json` and `app.j
    npx expo prebuild --platform android
    ```
 2. Build the release `.aab` or `.apk`:
+
    ```bash
    cd android
 
@@ -62,6 +66,7 @@ DevPilot Mobile (`net.tekdi.devpilot`) is preconfigured in `eas.json` and `app.j
    # Direct-install Release APK (.apk)
    ./gradlew assembleRelease
    ```
+
 3. Locate build artifacts:
    - `.aab`: `android/app/build/outputs/bundle/release/app-release.aab`
    - `.apk`: `android/app/build/outputs/apk/release/app-release.apk`
