@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "DevPilot",
+    "slug": "devpilot-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "devpilot",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#08090C",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "net.tekdi.devpilot"
+    },
+    "android": {
+      "package": "net.tekdi.devpilot",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#08090C"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
