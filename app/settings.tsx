@@ -147,12 +147,16 @@ export default function SettingsScreen() {
         showToast(`Connected as ${me.name}`);
         await syncNow();
       } else {
+        const isPhoneLocalhost =
+          Platform.OS !== 'web' && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(nextCfg.serverUrl);
         const hint =
           Platform.OS === 'web' && mode === 'direct'
             ? 'Browser CORS blocks direct Redmine calls. Switch to "DevPilot Server Proxy" and ensure "npm start" is running in pr-to-tracker/.'
-            : mode === 'server'
-              ? `Cannot reach DevPilot Server at ${nextCfg.serverUrl} (${meError}). Ensure "npm start" is running in pr-to-tracker/ (restart it if already open).`
-              : `Connection failed: ${meError}`;
+            : mode === 'server' && isPhoneLocalhost
+              ? 'On a phone, "localhost" points to the phone itself — not your computer. Connect both to the same Wi-Fi and enter http://<your-laptop-ip>:3333 (e.g. run "hostname -I" on laptop).'
+              : mode === 'server'
+                ? `Cannot reach DevPilot Server at ${nextCfg.serverUrl} (${meError}). Ensure "npm start" is running in pr-to-tracker/ and both devices are on the same Wi-Fi.`
+                : `Connection failed: ${meError}`;
         setConnError(hint);
         showToast('Saved locally — connection check failed');
       }
@@ -253,15 +257,22 @@ export default function SettingsScreen() {
               label="DevPilot Server URL (Web: http://localhost:3333 · Phone: http://<laptop-ip>:3333)"
               value={serverUrl}
               onChangeText={setServerUrl}
-              placeholder={detectDefaultServerUrl()}
+              placeholder="http://<laptop-ip>:3333"
               autoCapitalize="none"
             />
-            <Button
-              label={`Auto-detect URL (${detectDefaultServerUrl()})`}
-              size="sm"
-              variant="ghost"
-              onPress={() => setServerUrl(detectDefaultServerUrl())}
-            />
+            {Platform.OS !== 'web' && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(serverUrl.trim()) ? (
+              <Text style={{ color: palette.warning, fontSize: 12 }}>
+                Heads up: "localhost" only works on your laptop browser. On Android, replace "localhost" with your laptop's Wi-Fi IP (run "hostname -I" on Linux or "ipconfig" on Windows/macOS).
+              </Text>
+            ) : null}
+            {Platform.OS === 'web' || detectDefaultServerUrl() !== DEFAULT_SERVER_URL ? (
+              <Button
+                label={`Auto-detect URL (${detectDefaultServerUrl()})`}
+                size="sm"
+                variant="ghost"
+                onPress={() => setServerUrl(detectDefaultServerUrl())}
+              />
+            ) : null}
 
             {connInfo ? (
               <Text style={{ color: palette.success, fontSize: 12.5 }}>{connInfo}</Text>

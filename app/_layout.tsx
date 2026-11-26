@@ -1,19 +1,22 @@
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import React from "react";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { AppSplashScreen } from "../src/components/AppSplashScreen";
-import { CommandPaletteModal } from "../src/components/CommandPaletteModal";
-import { ToastBanner } from "../src/components/ui";
-import { AppProvider, useApp } from "../src/context/AppContext";
+import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import React from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AppSplashScreen } from '../src/components/AppSplashScreen';
+import { CommandPaletteModal } from '../src/components/CommandPaletteModal';
+import { ToastBanner } from '../src/components/ui';
+import { AppProvider, useApp } from '../src/context/AppContext';
 
 function RootNavigator() {
   const { dbReady, palette, themeMode } = useApp();
+  const [fontsLoaded, fontError] = useFonts(Ionicons.font);
 
-  if (!dbReady) {
+  if (!dbReady || (!fontsLoaded && !fontError)) {
     return (
       <>
-        <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
+        <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
         <AppSplashScreen />
       </>
     );
