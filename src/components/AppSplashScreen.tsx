@@ -1,8 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
 import { RADII, SPACING } from '../constants/theme';
 import { useApp } from '../context/AppContext';
+
+const SPLASH_LOGO = require('../../assets/icon.png');
 
 export function AppSplashScreen() {
   const { palette } = useApp();
@@ -56,8 +57,8 @@ export function AppSplashScreen() {
           { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
         ]}
       >
-        <View style={[styles.logoTile, { backgroundColor: palette.primary }]}>
-          <Ionicons name="flash" size={34} color="#FFFFFF" />
+        <View style={[styles.logoTile, { borderColor: palette.borderStrong }]}>
+          <Image source={SPLASH_LOGO} style={styles.logoImage} resizeMode="cover" />
         </View>
 
         <Text style={[styles.brand, { color: palette.text }]}>DevPilot</Text>
@@ -110,12 +111,18 @@ const styles = StyleSheet.create({
     maxWidth: 340,
   },
   logoTile: {
-    width: 72,
-    height: 72,
+    width: 88,
+    height: 88,
     borderRadius: RADII.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
+  },
+  logoImage: {
+    width: 88,
+    height: 88,
   },
   brand: {
     fontSize: 30,
