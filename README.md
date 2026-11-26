@@ -82,13 +82,16 @@ npm run android
 
 ## Build Android `.aab` / `.apk`
 
-Preconfigured via `eas.json` (`net.tekdi.devpilot`):
+Preconfigured via `eas.json` (`net.tekdi.devpilot`) — no global `eas-cli` install required:
 ```bash
+# Authenticate once with Expo
+npx eas-cli login
+
 # Cloud build signed Android App Bundle (.aab)
-eas build --platform android --profile production
+npm run build:aab
 
 # Cloud build standalone APK (.apk) for direct installation
-eas build --platform android --profile preview
+npm run build:apk
 ```
 See [docs/BUILD_AND_RELEASE.md](docs/BUILD_AND_RELEASE.md) for EAS setup and local Gradle (`./gradlew bundleRelease`) instructions.
 

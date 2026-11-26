@@ -8,6 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
+    "build:aab": "npx eas-cli build --platform android --profile production",
+    "build:apk": "npx eas-cli build --platform android --profile preview",
     "test:domain": "node --experimental-strip-types tests/domain.test.mjs"
   },
   "dependencies": {
