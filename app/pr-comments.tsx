@@ -1,9 +1,17 @@
-import * as Clipboard from 'expo-clipboard';
-import { AppIcon } from '../src/components/AppIcon';
-import { useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, Share, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
-import { ScreenHeader } from '../src/components/ScreenHeader';
+import * as Clipboard from "expo-clipboard";
+import { AppIcon } from "../src/components/AppIcon";
+import { useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Pressable,
+  Share,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from "react-native";
+import { ScreenHeader } from "../src/components/ScreenHeader";
 import {
   Badge,
   Button,
@@ -14,38 +22,40 @@ import {
   OfflineBanner,
   ScreenScroll,
   SegmentedControl,
-} from '../src/components/ui';
-import { INITIAL_DISPLAY_LIMIT } from '../src/constants/config';
-import { RADII, SPACING } from '../src/constants/theme';
-import { useApp } from '../src/context/AppContext';
-import { PrCacheRepo } from '../src/db/repositories';
+} from "../src/components/ui";
+import { INITIAL_DISPLAY_LIMIT } from "../src/constants/config";
+import { RADII, SPACING } from "../src/constants/theme";
+import { useApp } from "../src/context/AppContext";
+import { PrCacheRepo } from "../src/db/repositories";
 import {
   AgentTarget,
   NormalisedPrComment,
   buildAgentFixPrompt,
   computeLatestRoundIds,
   normalisePrComments,
-} from '../src/domain/prCommentsBuilder';
-import { fetchPullRequest } from '../src/services/githubClient';
-import type { PullRequestPayload } from '../src/types';
+} from "../src/domain/prCommentsBuilder";
+import { fetchPullRequest } from "../src/services/githubClient";
+import type { PullRequestPayload } from "../src/types";
 
 export default function PrCommentsScreen() {
   const params = useLocalSearchParams<{ url?: string }>();
   const { palette, config, isOnline, showToast } = useApp();
 
-  const [prUrl, setPrUrl] = useState('');
+  const [prUrl, setPrUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState("");
   const [recentPrs, setRecentPrs] = useState<PullRequestPayload[]>([]);
   const [pr, setPr] = useState<PullRequestPayload | null>(null);
   const [comments, setComments] = useState<NormalisedPrComment[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [latestIds, setLatestIds] = useState<Set<string>>(new Set());
   const [authorFilter, setAuthorFilter] = useState<string | null>(null);
-  const [agent, setAgent] = useState<AgentTarget>('claude');
+  const [agent, setAgent] = useState<AgentTarget>("claude");
   const [includeRules, setIncludeRules] = useState(true);
   const [includeContext, setIncludeContext] = useState(true);
-  const [commentLimit, setCommentLimit] = useState<number>(INITIAL_DISPLAY_LIMIT);
+  const [commentLimit, setCommentLimit] = useState<number>(
+    INITIAL_DISPLAY_LIMIT,
+  );
 
   const loadCachedList = useCallback(async () => {
     setRecentPrs(await PrCacheRepo.listRecent(8));
@@ -69,12 +79,12 @@ export default function PrCommentsScreen() {
     async (overrideUrl?: string) => {
       const target = (overrideUrl ?? prUrl).trim();
       if (!target) {
-        setErrorMsg('Paste a GitHub PR URL.');
+        setErrorMsg("Paste a GitHub PR URL.");
         return;
       }
       if (!config) return;
       setLoading(true);
-      setErrorMsg('');
+      setErrorMsg("");
       try {
         if (isOnline) {
           const data = await fetchPullRequest(config, target);
@@ -83,17 +93,22 @@ export default function PrCommentsScreen() {
           await loadCachedList();
         } else {
           const cached = await PrCacheRepo.get(target);
-          if (!cached) throw new Error('Offline and PR comments are not cached in SQLite yet.');
+          if (!cached)
+            throw new Error(
+              "Offline and PR comments are not cached in SQLite yet.",
+            );
           applyPrData(cached);
-          showToast('Loaded PR comments from offline SQLite cache');
+          showToast("Loaded PR comments from offline SQLite cache");
         }
       } catch (err) {
-        setErrorMsg(err instanceof Error ? err.message : 'Failed to fetch PR comments');
+        setErrorMsg(
+          err instanceof Error ? err.message : "Failed to fetch PR comments",
+        );
       } finally {
         setLoading(false);
       }
     },
-    [prUrl, config, isOnline, applyPrData, loadCachedList, showToast]
+    [prUrl, config, isOnline, applyPrData, loadCachedList, showToast],
   );
 
   useEffect(() => {
@@ -105,7 +120,7 @@ export default function PrCommentsScreen() {
 
   const authors = useMemo(() => {
     const counts = new Map<string, { n: number; bot: boolean }>();
-    comments.forEach(c => {
+    comments.forEach((c) => {
       const cur = counts.get(c.author) || { n: 0, bot: c.bot };
       cur.n += 1;
       counts.set(c.author, cur);
@@ -114,17 +129,26 @@ export default function PrCommentsScreen() {
   }, [comments]);
 
   const visibleComments = useMemo(
-    () => comments.filter(c => authorFilter === null || c.author === authorFilter),
-    [comments, authorFilter]
+    () =>
+      comments.filter(
+        (c) => authorFilter === null || c.author === authorFilter,
+      ),
+    [comments, authorFilter],
   );
 
   const promptText = useMemo(() => {
-    const picked = comments.filter(c => selectedIds.has(c.id));
-    return buildAgentFixPrompt({ pr, picked, agent, includeRules, includeContext });
+    const picked = comments.filter((c) => selectedIds.has(c.id));
+    return buildAgentFixPrompt({
+      pr,
+      picked,
+      agent,
+      includeRules,
+      includeContext,
+    });
   }, [pr, comments, selectedIds, agent, includeRules, includeContext]);
 
   const toggleComment = (id: string) => {
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -135,29 +159,49 @@ export default function PrCommentsScreen() {
   const handleCopyPrompt = async () => {
     if (!promptText) return;
     await Clipboard.setStringAsync(promptText);
-    showToast('Copied agent prompt to clipboard');
+    showToast("Copied agent prompt to clipboard");
   };
 
   const handleSharePrompt = async () => {
     if (!promptText) return;
-    await Share.share({ message: promptText, title: `PR #${pr?.number || ''} Fix Prompt` });
+    await Share.share({
+      message: promptText,
+      title: `PR #${pr?.number || ""} Fix Prompt`,
+    });
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.bg }}>
-      <ScreenHeader title="PR Comments" subtitle="Collect review comments & build agent prompt" showBack />
+      <ScreenHeader
+        title="PR Comments"
+        subtitle="Collect review comments & build agent prompt"
+        showBack
+      />
 
       <ScreenScroll>
         <OfflineBanner />
 
         {errorMsg ? (
-          <View style={[styles.errBox, { backgroundColor: palette.dangerSurface, borderColor: palette.danger }]}>
-            <Text style={{ color: palette.danger, fontSize: 13 }}>{errorMsg}</Text>
+          <View
+            style={[
+              styles.errBox,
+              {
+                backgroundColor: palette.dangerSurface,
+                borderColor: palette.danger,
+              },
+            ]}
+          >
+            <Text style={{ color: palette.danger, fontSize: 13 }}>
+              {errorMsg}
+            </Text>
           </View>
         ) : null}
 
         <Card>
-          <CardHeader title="Load Pull Request" subtitle="Cached automatically in SQLite for offline review" />
+          <CardHeader
+            title="Load Pull Request"
+            subtitle="Cached automatically in SQLite for offline review"
+          />
           <View style={styles.body}>
             <FieldInput
               label="GitHub PR URL"
@@ -166,7 +210,11 @@ export default function PrCommentsScreen() {
               placeholder="https://github.com/owner/repo/pull/42"
               autoCapitalize="none"
             />
-            <Button label={loading ? 'Loading…' : 'Fetch Comments'} loading={loading} onPress={() => handleFetch()} />
+            <Button
+              label={loading ? "Loading…" : "Fetch Comments"}
+              loading={loading}
+              onPress={() => handleFetch()}
+            />
           </View>
         </Card>
 
@@ -174,18 +222,33 @@ export default function PrCommentsScreen() {
           <Card>
             <CardHeader title="Cached PRs" subtitle="Available offline" />
             <View style={styles.body}>
-              {recentPrs.map(item => (
+              {recentPrs.map((item) => (
                 <Pressable
                   key={item.url}
                   onPress={() => {
                     setPrUrl(item.url);
                     applyPrData(item);
                   }}
-                  style={[styles.recentRow, { backgroundColor: palette.surface2, borderColor: palette.borderSubtle }]}
+                  style={[
+                    styles.recentRow,
+                    {
+                      backgroundColor: palette.surface2,
+                      borderColor: palette.borderSubtle,
+                    },
+                  ]}
                 >
-                  <Text style={{ color: palette.text, fontWeight: '600', fontSize: 13 }}>{item.title}</Text>
+                  <Text
+                    style={{
+                      color: palette.text,
+                      fontWeight: "600",
+                      fontSize: 13,
+                    }}
+                  >
+                    {item.title}
+                  </Text>
                   <Text style={{ color: palette.textMuted, fontSize: 12 }}>
-                    {item.repo} #{item.number} · {item.discussion_count} comments
+                    {item.repo} #{item.number} · {item.discussion_count}{" "}
+                    comments
                   </Text>
                 </Pressable>
               ))}
@@ -199,15 +262,28 @@ export default function PrCommentsScreen() {
               <CardHeader
                 title={`${pr.repo} #${pr.number}`}
                 subtitle={`${pr.author} · ${comments.length} comments · ${selectedIds.size} selected`}
-                right={<Badge label={pr.merged ? 'Merged' : pr.state} tone={pr.merged ? 'success' : 'primary'} />}
+                right={
+                  <Badge
+                    label={pr.merged ? "Merged" : pr.state}
+                    tone={pr.merged ? "success" : "primary"}
+                  />
+                }
               />
               <View style={styles.body}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                  <Chip label={`All (${comments.length})`} active={authorFilter === null} onPress={() => setAuthorFilter(null)} />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}
+                >
+                  <Chip
+                    label={`All (${comments.length})`}
+                    active={authorFilter === null}
+                    onPress={() => setAuthorFilter(null)}
+                  />
                   {authors.map(([author, info]) => (
                     <Chip
                       key={author}
-                      label={`${info.bot ? 'bot · ' : ''}${author} (${info.n})`}
+                      label={`${info.bot ? "bot · " : ""}${author} (${info.n})`}
                       active={authorFilter === author}
                       onPress={() => setAuthorFilter(author)}
                     />
@@ -215,12 +291,29 @@ export default function PrCommentsScreen() {
                 </ScrollView>
 
                 <View style={styles.selActions}>
-                  <Button label="Latest round" size="sm" variant="ghost" onPress={() => setSelectedIds(new Set(latestIds))} />
-                  <Button label="All" size="sm" variant="ghost" onPress={() => setSelectedIds(new Set(comments.map(c => c.id)))} />
-                  <Button label="None" size="sm" variant="ghost" onPress={() => setSelectedIds(new Set())} />
+                  <Button
+                    label="Latest round"
+                    size="sm"
+                    variant="ghost"
+                    onPress={() => setSelectedIds(new Set(latestIds))}
+                  />
+                  <Button
+                    label="All"
+                    size="sm"
+                    variant="ghost"
+                    onPress={() =>
+                      setSelectedIds(new Set(comments.map((c) => c.id)))
+                    }
+                  />
+                  <Button
+                    label="None"
+                    size="sm"
+                    variant="ghost"
+                    onPress={() => setSelectedIds(new Set())}
+                  />
                 </View>
 
-                {visibleComments.slice(0, commentLimit).map(c => {
+                {visibleComments.slice(0, commentLimit).map((c) => {
                   const checked = selectedIds.has(c.id);
                   return (
                     <Pressable
@@ -229,26 +322,49 @@ export default function PrCommentsScreen() {
                       style={[
                         styles.cmtRow,
                         {
-                          backgroundColor: checked ? palette.surface2 : palette.bgElevated,
-                          borderColor: checked ? palette.primary : palette.borderSubtle,
+                          backgroundColor: checked
+                            ? palette.surface2
+                            : palette.bgElevated,
+                          borderColor: checked
+                            ? palette.primary
+                            : palette.borderSubtle,
                           opacity: checked ? 1 : 0.6,
                         },
                       ]}
                     >
                       <View style={styles.cmtHead}>
                         <AppIcon
-                          name={checked ? 'checkbox' : 'square-outline'}
+                          name={checked ? "checkbox" : "square-outline"}
                           size={18}
-                          color={checked ? palette.primaryInk : palette.textMuted}
+                          color={
+                            checked ? palette.primaryInk : palette.textMuted
+                          }
                         />
-                        <Text style={{ color: palette.text, fontWeight: '700', fontSize: 13 }}>{c.author}</Text>
+                        <Text
+                          style={{
+                            color: palette.text,
+                            fontWeight: "700",
+                            fontSize: 13,
+                          }}
+                        >
+                          {c.author}
+                        </Text>
                         {c.bot ? <Badge label="bot" tone="primary" /> : null}
-                        {c.outdated ? <Badge label="outdated" tone="warning" /> : null}
+                        {c.outdated ? (
+                          <Badge label="outdated" tone="warning" />
+                        ) : null}
                       </View>
-                      <Text style={{ color: palette.textMuted, fontSize: 11.5 }}>
-                        {c.kind === 'inline' ? `${c.path}${c.line ? `:${c.line}` : ''}` : c.kind}
+                      <Text
+                        style={{ color: palette.textMuted, fontSize: 11.5 }}
+                      >
+                        {c.kind === "inline"
+                          ? `${c.path}${c.line ? `:${c.line}` : ""}`
+                          : c.kind}
                       </Text>
-                      <Text style={{ color: palette.text2, fontSize: 12.5 }} numberOfLines={5}>
+                      <Text
+                        style={{ color: palette.text2, fontSize: 12.5 }}
+                        numberOfLines={5}
+                      >
                         {c.body}
                       </Text>
                     </Pressable>
@@ -258,39 +374,70 @@ export default function PrCommentsScreen() {
                   <Button
                     label={`Show more comments (${visibleComments.length - commentLimit} remaining)`}
                     variant="ghost"
-                    onPress={() => setCommentLimit(prev => prev + INITIAL_DISPLAY_LIMIT)}
+                    onPress={() =>
+                      setCommentLimit((prev) => prev + INITIAL_DISPLAY_LIMIT)
+                    }
                   />
                 )}
               </View>
             </Card>
 
             <Card>
-              <CardHeader title="Agent Fix Prompt" subtitle={`${promptText.length} chars · ~${Math.ceil(promptText.length / 4)} tokens`} />
+              <CardHeader
+                title="Agent Fix Prompt"
+                subtitle={`${promptText.length} chars · ~${Math.ceil(promptText.length / 4)} tokens`}
+              />
               <View style={styles.body}>
                 <SegmentedControl
                   value={agent}
                   onChange={setAgent}
                   options={[
-                    { value: 'claude', label: 'Claude Code' },
-                    { value: 'antigravity', label: 'Antigravity' },
-                    { value: 'any', label: 'Any Agent' },
+                    { value: "claude", label: "Claude Code" },
+                    { value: "antigravity", label: "Antigravity" },
+                    { value: "any", label: "Any Agent" },
                   ]}
                 />
 
                 <View style={styles.switchRow}>
-                  <Text style={{ color: palette.text2, flex: 1, fontSize: 13 }}>Add review rules instruction</Text>
-                  <Switch value={includeRules} onValueChange={setIncludeRules} />
+                  <Text style={{ color: palette.text2, flex: 1, fontSize: 13 }}>
+                    Add review rules instruction
+                  </Text>
+                  <Switch
+                    value={includeRules}
+                    onValueChange={setIncludeRules}
+                  />
                 </View>
                 <View style={styles.switchRow}>
-                  <Text style={{ color: palette.text2, flex: 1, fontSize: 13 }}>Include inline diff context</Text>
-                  <Switch value={includeContext} onValueChange={setIncludeContext} />
+                  <Text style={{ color: palette.text2, flex: 1, fontSize: 13 }}>
+                    Include inline diff context
+                  </Text>
+                  <Switch
+                    value={includeContext}
+                    onValueChange={setIncludeContext}
+                  />
                 </View>
 
-                <FieldInput value={promptText} editable={false} multiline style={{ minHeight: 180 }} />
+                <FieldInput
+                  value={promptText}
+                  editable={false}
+                  multiline
+                  style={{ minHeight: 180 }}
+                />
 
                 <View style={styles.row2}>
-                  <Button label="Share .md" variant="ghost" onPress={handleSharePrompt} disabled={!promptText} style={{ flex: 1 }} />
-                  <Button label="Copy Prompt" onPress={handleCopyPrompt} disabled={!promptText} style={{ flex: 1 }} />
+                  <Button
+                    label="Share .md"
+                    variant="ghost"
+                    onPress={handleSharePrompt}
+                    disabled={!promptText}
+                    style={{ flex: 1 }}
+                  />
+                  <Button
+                    label="Copy Prompt"
+                    onPress={handleCopyPrompt}
+                    disabled={!promptText}
+                    style={{ flex: 1 }}
+                  />
                 </View>
               </View>
             </Card>
@@ -318,7 +465,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   selActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: SPACING.sm,
   },
   cmtRow: {
@@ -328,17 +475,17 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   cmtHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   row2: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: SPACING.sm,
   },
 });
