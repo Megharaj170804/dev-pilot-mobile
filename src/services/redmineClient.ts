@@ -62,7 +62,7 @@ async function requestJson<T>(url: string, init: RequestInit = {}): Promise<T> {
     }
     if (parsed === null && /html/i.test(res.headers.get('content-type') || '')) {
       throw new HttpApiError(
-        'Server returned HTML instead of JSON — restart "npm start" in pr-to-tracker/ to load the updated API.',
+        'That address answered with a web page, not the DevPilot API. Check the IP/port, or restart "npm start" in pr-to-tracker/ so the latest server code is loaded.',
         502,
         false
       );
@@ -635,6 +635,35 @@ export const RedmineClient = {
       }>;
     }>(`${cfg.serverUrl}/api/history?limit=${limit}`);
     return res.history || [];
+  },
+
+  /** Quick reachability test against the DevPilot server (8s timeout, no Redmine call). */
+  async pingServer(serverUrl: string): Promise<void> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    try {
+      const res = await fetch(`${serverUrl}/api/health`, { signal: controller.signal });
+      const body = (await res.json().catch(() => null)) as { ok?: boolean } | null;
+      if (!res.ok || !body?.ok) {
+        throw new HttpApiError(
+          'Reached a server, but it is not DevPilot or is an old version — restart "npm start" in pr-to-tracker/.',
+          res.status,
+          false
+        );
+      }
+    } catch (err) {
+      if (err instanceof HttpApiError) throw err;
+      const timedOut = err instanceof Error && err.name === 'AbortError';
+      throw new HttpApiError(
+        timedOut
+          ? 'Timed out — the laptop is not reachable. Same Wi-Fi? Allow port 3333 in the laptop firewall (sudo ufw allow 3333).'
+          : 'Network request failed — server not reachable at that address.',
+        0,
+        true
+      );
+    } finally {
+      clearTimeout(timer);
+    }
   },
 
   async fetchIntegrationsStatus(cfg: AppConfig): Promise<GoogleIntegrationsStatus> {

@@ -19,6 +19,7 @@ import { useApp } from "../src/context/AppContext";
 import { SyncQueueRepo, clearCachedData } from "../src/db/repositories";
 import {
   detectDefaultServerUrl,
+  normalizeServerUrl,
   saveAppConfig,
 } from "../src/services/configService";
 import { RedmineClient } from "../src/services/redmineClient";
@@ -115,6 +116,18 @@ export default function SettingsScreen() {
     setGoogleClientSecret(config.googleClientSecret || "");
     setEodSheetId(config.eodSheetId || "");
     refreshGoogleStatus(config.serverUrl);
+    // Keep the connection status visible after leaving/reopening Settings (it used to vanish).
+    if (config.mode === "server" && config.serverUrl) {
+      RedmineClient.pingServer(config.serverUrl)
+        .then(() => {
+          setConnError("");
+          setConnInfo(`Connected to DevPilot Server · ${config.serverUrl}`);
+        })
+        .catch((err) => {
+          setConnInfo("");
+          setConnError(err instanceof Error ? err.message : "Server not reachable");
+        });
+    }
   }, [config]);
 
   useEffect(() => {
@@ -133,12 +146,26 @@ export default function SettingsScreen() {
         githubToken,
         geminiApiKey,
         groqApiKey,
-        serverUrl,
+        serverUrl: normalizeServerUrl(serverUrl),
         googleClientId,
         googleClientSecret,
         eodSheetId,
       };
       await saveAppConfig(nextCfg);
+      setServerUrl(nextCfg.serverUrl);
+
+      if (mode === "server") {
+        try {
+          await RedmineClient.pingServer(nextCfg.serverUrl);
+        } catch (err) {
+          await reloadConfig();
+          setConnError(
+            `${err instanceof Error ? err.message : "Server not reachable"} (${nextCfg.serverUrl})`,
+          );
+          showToast("Saved — server not reachable");
+          return;
+        }
+      }
       await reloadConfig();
 
       let meError = "";

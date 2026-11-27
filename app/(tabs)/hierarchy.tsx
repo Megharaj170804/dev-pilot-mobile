@@ -44,6 +44,42 @@ type StatusFilter = 'all' | 'open' | 'done';
 const RING_RADIUS = 33;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
+type IssueCardProps = {
+  n: TrackerNode;
+  palette: ReturnType<typeof useApp>['palette'];
+  onOpen: (n: TrackerNode) => void;
+  onLog: (n: TrackerNode) => void;
+};
+
+// Memoised so typing in search / expanding an epic doesn't re-render every card (was the main lag source).
+const IssueCard = React.memo(function IssueCard({ n, palette, onOpen, onLog }: IssueCardProps) {
+  const isBug = n.tracker === 'Bug';
+  const tone = n.is_closed ? 'neutral' : /progress/i.test(n.status || '') ? 'warning' : 'primary';
+  return (
+    <Pressable
+      onPress={() => onOpen(n)}
+      style={[styles.nodeCard, { backgroundColor: palette.surface2, borderColor: palette.borderSubtle }]}
+    >
+      <View style={styles.nodeTop}>
+        <Badge label={n.tracker} tone={isBug ? 'danger' : n.tracker === 'Epic' ? 'epic' : n.tracker === 'Feature' ? 'primary' : 'success'} />
+        <Text style={{ color: palette.textSubtle, fontSize: 12 }}>#{n.id}</Text>
+        <Badge label={n.status || 'Open'} tone={tone} />
+      </View>
+      <Text style={{ color: palette.text, fontWeight: '600', fontSize: 13.5 }} numberOfLines={2}>
+        {n.subject}
+      </Text>
+      <View style={styles.nodeMeta}>
+        <Text style={{ color: palette.textMuted, fontSize: 12 }}>
+          {n.assigned_to || 'Unassigned'} · {n.spent_hours || 0}h / {n.estimated_hours || 0}h
+        </Text>
+        <Button label="Log" size="sm" variant="ghost" onPress={() => onLog(n)} />
+      </View>
+    </Pressable>
+  );
+});
+
+const LANE_PAGE = 20;
+
 export default function WorkHierarchyScreen() {
   const isFocused = useIsFocused();
   const { palette, config, isOnline, syncVersion, syncNow, showToast } = useApp();
@@ -64,6 +100,7 @@ export default function WorkHierarchyScreen() {
   const [query, setQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [expandedEpics, setExpandedEpics] = useState<Set<number>>(new Set());
+  const [laneLimits, setLaneLimits] = useState<Record<string, number>>({});
 
   const [drawerIssue, setDrawerIssue] = useState<TrackerNode | null>(null);
   const [logModalOpen, setLogModalOpen] = useState(false);
@@ -212,40 +249,14 @@ export default function WorkHierarchyScreen() {
     }
   };
 
-  const renderIssueCard = (n: TrackerNode) => {
-    const isBug = n.tracker === 'Bug';
-    const tone = n.is_closed ? 'neutral' : /progress/i.test(n.status || '') ? 'warning' : 'primary';
-    return (
-      <Pressable
-        key={n.id}
-        onPress={() => setDrawerIssue(n)}
-        style={[styles.nodeCard, { backgroundColor: palette.surface2, borderColor: palette.borderSubtle }]}
-      >
-        <View style={styles.nodeTop}>
-          <Badge label={n.tracker} tone={isBug ? 'danger' : n.tracker === 'Epic' ? 'epic' : n.tracker === 'Feature' ? 'primary' : 'success'} />
-          <Text style={{ color: palette.textSubtle, fontSize: 12 }}>#{n.id}</Text>
-          <Badge label={n.status || 'Open'} tone={tone} />
-        </View>
-        <Text style={{ color: palette.text, fontWeight: '600', fontSize: 13.5 }} numberOfLines={2}>
-          {n.subject}
-        </Text>
-        <View style={styles.nodeMeta}>
-          <Text style={{ color: palette.textMuted, fontSize: 12 }}>
-            {n.assigned_to || 'Unassigned'} · {n.spent_hours || 0}h / {n.estimated_hours || 0}h
-          </Text>
-          <Button
-            label="Log"
-            size="sm"
-            variant="ghost"
-            onPress={() => {
-              setLogTarget(n);
-              setLogModalOpen(true);
-            }}
-          />
-        </View>
-      </Pressable>
-    );
-  };
+  const openIssue = useCallback((n: TrackerNode) => setDrawerIssue(n), []);
+  const logIssue = useCallback((n: TrackerNode) => {
+    setLogTarget(n);
+    setLogModalOpen(true);
+  }, []);
+  const renderIssueCard = (n: TrackerNode) => (
+    <IssueCard key={n.id} n={n} palette={palette} onOpen={openIssue} onLog={logIssue} />
+  );
 
   const boardLanes = useMemo(() => {
     const mineItems = nodes.filter(n => n.is_mine && (n.tracker === 'Task' || n.tracker === 'Bug') && matches(n));
@@ -487,7 +498,19 @@ export default function WorkHierarchyScreen() {
                 </View>
                 <View style={styles.laneBody}>
                   {lane.items.length ? (
-                    lane.items.map(renderIssueCard)
+                    <>
+                      {lane.items.slice(0, laneLimits[lane.name] ?? LANE_PAGE).map(renderIssueCard)}
+                      {lane.items.length > (laneLimits[lane.name] ?? LANE_PAGE) ? (
+                        <Button
+                          label={`Show more (${lane.items.length - (laneLimits[lane.name] ?? LANE_PAGE)})`}
+                          size="sm"
+                          variant="ghost"
+                          onPress={() =>
+                            setLaneLimits(prev => ({ ...prev, [lane.name]: (prev[lane.name] ?? LANE_PAGE) + LANE_PAGE }))
+                          }
+                        />
+                      ) : null}
+                    </>
                   ) : (
                     <Text style={{ color: palette.textSubtle, fontSize: 12, textAlign: 'center', padding: 12 }}>
                       No issues

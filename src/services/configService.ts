@@ -8,6 +8,13 @@ import {
 } from '../constants/config';
 import type { AppConfig, ConnectionMode } from '../types';
 
+/** "192.168.1.5:3333/" -> "http://192.168.1.5:3333" (adds scheme, strips trailing slash and /api). */
+export function normalizeServerUrl(raw: string): string {
+  let v = (raw || '').trim().replace(/\/+$/, '').replace(/\/api$/i, '');
+  if (v && !/^https?:\/\//i.test(v)) v = `http://${v}`;
+  return v;
+}
+
 export function detectDefaultServerUrl(): string {
   if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.hostname) {
     return `http://${window.location.hostname}:3333`;
@@ -91,7 +98,7 @@ export async function loadAppConfig(): Promise<AppConfig> {
     githubToken: githubToken || '',
     geminiApiKey: geminiApiKey || '',
     groqApiKey: groqApiKey || '',
-    serverUrl: (serverUrl || defaultServer).replace(/\/+$/, ''),
+    serverUrl: normalizeServerUrl(serverUrl || defaultServer),
     googleClientId: googleClientId || '',
     googleClientSecret: googleClientSecret || '',
     eodSheetId: eodSheetId || '',
@@ -106,7 +113,7 @@ export async function saveAppConfig(config: AppConfig): Promise<void> {
     setItem(SECURE_KEYS.GITHUB_TOKEN, config.githubToken.trim()),
     setItem(SECURE_KEYS.GEMINI_API_KEY, config.geminiApiKey.trim()),
     setItem(SECURE_KEYS.GROQ_API_KEY, config.groqApiKey.trim()),
-    setItem(SECURE_KEYS.SERVER_URL, config.serverUrl.trim().replace(/\/+$/, '') || DEFAULT_SERVER_URL),
+    setItem(SECURE_KEYS.SERVER_URL, normalizeServerUrl(config.serverUrl) || DEFAULT_SERVER_URL),
     setItem(SECURE_KEYS.GOOGLE_CLIENT_ID, (config.googleClientId || '').trim()),
     setItem(SECURE_KEYS.GOOGLE_CLIENT_SECRET, (config.googleClientSecret || '').trim()),
     setItem(SECURE_KEYS.EOD_SHEET_ID, (config.eodSheetId || '').trim()),
